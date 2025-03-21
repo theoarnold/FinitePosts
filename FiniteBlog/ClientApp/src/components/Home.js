@@ -192,15 +192,22 @@ const Home = () => {
           />
         </div>
         
-        <button type="submit" disabled={isSubmitting} style={{
-          maxWidth: '200px',
-          width: '100%',
-          marginTop: '1rem',
-          marginLeft: 'auto',
-          display: 'block'
-        }}>
-          {isSubmitting ? 'Posting...' : 'Post'}
-        </button>
+        {content.trim().length > 0 && (
+          <button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="post-button"
+            style={{
+              maxWidth: '200px',
+              width: '100%',
+              marginTop: '0.5rem',
+              marginLeft: 'auto',
+              display: 'block'
+            }}
+          >
+            {isSubmitting ? 'Posting...' : 'Post'}
+          </button>
+        )}
       </form>
     </div>
   );

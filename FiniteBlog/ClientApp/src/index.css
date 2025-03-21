@@ -56,9 +56,11 @@ code {
   background-color: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 1rem 1.5rem 0.75rem 1.5rem;
+  padding: 1rem 1.5rem 0.5rem 1.5rem;
   margin: 1rem auto;
   max-width: 800px;
+  min-height: 330px; /* Approximate height to prevent layout shift */
+  transition: min-height 0.3s ease;
 }
 
 .card:hover {
@@ -99,6 +101,7 @@ textarea {
   font-size: 16px; /* Prevents zoom on mobile */
   line-height: 1.5;
   box-sizing: border-box;
+  margin-bottom: 0;
 }
 
 select, input[type="number"] {
@@ -300,7 +303,7 @@ button:disabled {
   }
   
   .card {
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
   }
   
   textarea, select, input[type="number"] {
@@ -314,7 +317,8 @@ button:disabled {
   
   button[type="submit"] {
     padding: 0.85rem 1.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
     width: 100%;
     max-width: 100%;
   }
@@ -471,4 +475,22 @@ button:disabled {
 
 .view-limit-btn:active {
   /* No transform needed */
+}
+
+.post-button {
+  animation: fadeInSlideUp 0.3s ease forwards;
+  transform-origin: right bottom;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 } 

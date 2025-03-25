@@ -19,30 +19,28 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
         }));
 
-// Register the SlugGeneratorService
-builder.Services.AddSingleton<SlugGeneratorService>();
+builder.Services.AddScoped<IVisitorService, VisitorService>();
 
-// Register the repository
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 
-// Register the PostService
 builder.Services.AddScoped<IPostService, PostService>();
 
-// Add SignalR
 builder.Services.AddSignalR();
 
-// Register the ConnectionManager
 builder.Services.AddSingleton<FiniteBlog.Hubs.ConnectionManager>();
 
-// Add CORS to allow React frontend to communicate with API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) // Allow any origin
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+                "http://localhost:3000",  // React dev server
+                "http://localhost:5206",// API domain
+                "https://your-production-domain.com"  // Production domain
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 

@@ -1,20 +1,14 @@
 using FiniteBlog.Models;
 using FiniteBlog.Repositories;
 using FiniteBlog.Hubs;
-using System;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
+using FiniteBlog.DTOs;
 using Microsoft.AspNetCore.SignalR;
-using static FiniteBlog.Services.IPostService;
 
 namespace FiniteBlog.Services
 {
     public class PostService : IPostService
     {
         private readonly IPostRepository _repository;
-        private readonly SlugGeneratorService _slugGenerator;
         private readonly ILogger<PostService> _logger;
         private readonly IHubContext<PostHub> _hubContext;
         private static readonly object _lock = new object();
@@ -22,12 +16,10 @@ namespace FiniteBlog.Services
 
         public PostService(
             IPostRepository repository,
-            SlugGeneratorService slugGenerator,
             ILogger<PostService> logger,
             IHubContext<PostHub> hubContext)
         {
             _repository = repository;
-            _slugGenerator = slugGenerator;
             _logger = logger;
             _hubContext = hubContext;
         }
@@ -36,8 +28,8 @@ namespace FiniteBlog.Services
         {
             _logger.LogInformation($"Getting post with slug: {slug}");
             _logger.LogInformation($"Visitor ID: {visitorId ?? "none"}, IP: {ipAddress ?? "unknown"}");
-            
-            var post = await _repository.GetPostBySlugAsync(slug);
+
+            AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
 
             if (post == null)
             {
@@ -127,8 +119,7 @@ namespace FiniteBlog.Services
                 Slug = post.Slug,
                 ViewLimit = post.ViewLimit,
                 CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt,
-                ActiveViewers = 0 // Will be populated by the ConnectionManager
+                CreatedAt = post.CreatedAt
             };
             
             // Broadcast the view count update to all clients if it changed
@@ -167,13 +158,13 @@ namespace FiniteBlog.Services
             bool slugExists;
             do
             {
-                slug = _slugGenerator.GenerateRandomSlug();
+                slug = SlugGenerator.GenerateRandomSlug();
                 slugExists = await _repository.SlugExistsAsync(slug);
             } while (slugExists);
 
             _logger.LogInformation($"Generated slug: {slug}");
 
-            var post = new AnonymousPost
+            AnonymousPost post = new AnonymousPost
             {
                 Id = Guid.NewGuid(),
                 Content = createDto.Content,
@@ -194,8 +185,7 @@ namespace FiniteBlog.Services
                 Slug = post.Slug,
                 ViewLimit = post.ViewLimit,
                 CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt,
-                ActiveViewers = 0
+                CreatedAt = post.CreatedAt
             };
             
             _logger.LogInformation($"Created post with ID: {post.Id}, slug: {post.Slug}");
@@ -205,8 +195,8 @@ namespace FiniteBlog.Services
         public async Task<ViewCountDto?> GetPostViewCountAsync(string slug)
         {
             _logger.LogInformation($"Getting view count for post with slug: {slug}");
-            
-            var post = await _repository.GetPostBySlugAsync(slug);
+
+            AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
 
             if (post == null)
             {
@@ -218,8 +208,7 @@ namespace FiniteBlog.Services
             var viewCountDto = new ViewCountDto
             {
                 CurrentViews = post.CurrentViews,
-                ViewLimit = post.ViewLimit,
-                ActiveViewers = 0 // Will be populated from ConnectionManager
+                ViewLimit = post.ViewLimit
             };
             
             _logger.LogInformation($"Returning view count: {post.CurrentViews}/{post.ViewLimit}");

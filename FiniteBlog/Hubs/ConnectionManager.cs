@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 
 namespace FiniteBlog.Hubs
@@ -12,7 +8,6 @@ namespace FiniteBlog.Hubs
         private readonly ILogger<ConnectionManager> _logger;
         private readonly IHubContext<PostHub> _hubContext;
         private readonly ConcurrentDictionary<string, string> _connections = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, string> _uniqueViewers = new ConcurrentDictionary<string, string>();
         private readonly ConcurrentDictionary<string, string> _connectionToVisitor = new ConcurrentDictionary<string, string>();
         private readonly ConcurrentDictionary<string, HashSet<string>> _postViewers = new ConcurrentDictionary<string, HashSet<string>>();
 

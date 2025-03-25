@@ -2,12 +2,12 @@ using System.Security.Cryptography;
 
 namespace FiniteBlog.Services
 {
-    public class SlugGeneratorService
+    public static class SlugGenerator
     {
         private const string AllowedChars = "abcdefghijklmnopqrstuvwxyz0123456789";
         private const int SlugLength = 8;
 
-        public string GenerateRandomSlug()
+        public static string GenerateRandomSlug()
         {
             var random = new byte[SlugLength];
             using (var rng = RandomNumberGenerator.Create())

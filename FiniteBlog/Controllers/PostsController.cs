@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using FiniteBlog.Services;
+using FiniteBlog.DTOs;
+
 namespace FiniteBlog.Controllers
 {
     [ApiController]
@@ -7,50 +9,25 @@ namespace FiniteBlog.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
+        private readonly IVisitorService _visitorService;
         private readonly ILogger<PostsController> _logger;
 
         public PostsController(
             IPostService postService,
+            IVisitorService visitorService,
             ILogger<PostsController> logger)
         {
             _postService = postService;
+            _visitorService = visitorService;
             _logger = logger;
         }
 
-        // DTO for creating posts
-        public class CreatePostDto
-        {
-            public string Content { get; set; } = string.Empty;
-            public int ViewLimit { get; set; }
-        }
-
-        // GET: api/posts/{slug}
         [HttpGet("{slug}")]
         public async Task<ActionResult<object>> GetPost(string slug)
         {
-            // Get or create visitor ID
-            string visitorId = Request.Cookies["visitor_id"];
-            if (string.IsNullOrEmpty(visitorId))
-            {
-                visitorId = Guid.NewGuid().ToString();
-                Response.Cookies.Append("visitor_id", visitorId, new CookieOptions
-                {
-                    Expires = DateTimeOffset.UtcNow.AddYears(1),
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Lax
-                });
-                _logger.LogInformation($"Generated new visitor ID: {visitorId}");
-            }
-            else
-            {
-                _logger.LogInformation($"Using existing visitor ID: {visitorId}");
-            }
-
-            // Get client IP address
+            string visitorId = _visitorService.GetOrCreateVisitorId(HttpContext);
             string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             
-            // Normalize localhost IP addresses (::1 and 127.0.0.1 should be treated the same)
             if (ipAddress == "::1" || ipAddress == "127.0.0.1")
             {
                 ipAddress = "localhost";
@@ -58,7 +35,7 @@ namespace FiniteBlog.Controllers
             
             _logger.LogInformation($"Client IP address: {ipAddress ?? "unknown"}");
 
-            var post = await _postService.GetPostAsync(slug, visitorId, ipAddress);
+            PostDto? post = await _postService.GetPostAsync(slug, visitorId, ipAddress);
             
             if (post == null)
             {
@@ -68,9 +45,8 @@ namespace FiniteBlog.Controllers
             return post;
         }
 
-        // POST: api/posts
         [HttpPost]
-        public async Task<ActionResult<object>> CreatePost(IPostService.CreatePostDto postDto)
+        public async Task<ActionResult<object>> CreatePost(CreatePostDto postDto)
         {
             var (post, errorMessage) = await _postService.CreatePostAsync(postDto);
             
@@ -82,9 +58,8 @@ namespace FiniteBlog.Controllers
             return CreatedAtAction(nameof(GetPost), new { slug = post.Slug }, post);
         }
         
-        // GET: api/posts/{slug}/views
         [HttpGet("{slug}/views")]
-        public async Task<ActionResult<IPostService.ViewCountDto>> GetPostViewCount(string slug)
+        public async Task<ActionResult<ViewCountDto>> GetPostViewCount(string slug)
         {
             var viewCount = await _postService.GetPostViewCountAsync(slug);
             

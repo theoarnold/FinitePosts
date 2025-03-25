@@ -1,7 +1,10 @@
 using FiniteBlog.Data;
 using FiniteBlog.Services;
+using FiniteBlog.Repositories;
+using FiniteBlog.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.AspNetCore.CookiePolicy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,20 +22,40 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register the SlugGeneratorService
 builder.Services.AddSingleton<SlugGeneratorService>();
 
+// Register the repository
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+
+// Register the PostService
+builder.Services.AddScoped<IPostService, PostService>();
+
+// Add SignalR
+builder.Services.AddSignalR();
+
+// Register the ConnectionManager
+builder.Services.AddSingleton<FiniteBlog.Hubs.ConnectionManager>();
+
 // Add CORS to allow React frontend to communicate with API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(origin => true) // Allow any origin
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Add cookie policy configuration
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => false;
+    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+});
 
 // Comment out SPA services
 //builder.Services.AddSpaStaticFiles(configuration =>
@@ -56,6 +79,7 @@ app.UseCors("CorsPolicy");
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<PostHub>("/posthub");
 
 // Comment out SPA middleware
 //app.UseSpa(spa =>

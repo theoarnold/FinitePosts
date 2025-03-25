@@ -11,5 +11,17 @@ namespace FiniteBlog.Data
         }
 
         public DbSet<AnonymousPost> AnonymousPosts { get; set; } = null!;
+        public DbSet<PostViewer> PostViewers { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PostViewer>()
+                .HasOne(pv => pv.Post)
+                .WithMany(p => p.Viewers)
+                .HasForeignKey(pv => pv.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 } 

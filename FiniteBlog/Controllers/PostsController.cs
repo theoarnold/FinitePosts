@@ -1,30 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FiniteBlog.Data;
-using FiniteBlog.Models;
 using FiniteBlog.Services;
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Text.Json;
-
 namespace FiniteBlog.Controllers
 {
     [ApiController]
     [Route("api/posts")]
     public class PostsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly SlugGeneratorService _slugGenerator;
+        private readonly IPostService _postService;
         private readonly ILogger<PostsController> _logger;
 
         public PostsController(
-            ApplicationDbContext context, 
-            SlugGeneratorService slugGenerator,
+            IPostService postService,
             ILogger<PostsController> logger)
         {
-            _context = context;
-            _slugGenerator = slugGenerator;
+            _postService = postService;
             _logger = logger;
         }
 
@@ -39,122 +28,72 @@ namespace FiniteBlog.Controllers
         [HttpGet("{slug}")]
         public async Task<ActionResult<object>> GetPost(string slug)
         {
-            _logger.LogInformation($"Getting post with slug: {slug}");
-            
-            var post = await _context.AnonymousPosts.FirstOrDefaultAsync(p => p.Slug == slug);
-
-            if (post == null)
+            // Get or create visitor ID
+            string visitorId = Request.Cookies["visitor_id"];
+            if (string.IsNullOrEmpty(visitorId))
             {
-                _logger.LogWarning($"Post with slug {slug} not found");
-                return NotFound();
-            }
-
-            // Get client IP
-            string? clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-            _logger.LogInformation($"Request from IP: {clientIp}");
-            
-            if (clientIp != null && !post.ViewerIps.Contains(clientIp))
-            {
-                // Only increment the view count for unique IPs
-                post.ViewerIps.Add(clientIp);
-                post.CurrentViews = post.ViewerIps.Count; // Set current views to unique IP count
-                _logger.LogInformation($"Incrementing view count to {post.CurrentViews}");
-
-                // Check if we've reached the view limit
-                if (post.CurrentViews >= post.ViewLimit)
+                visitorId = Guid.NewGuid().ToString();
+                Response.Cookies.Append("visitor_id", visitorId, new CookieOptions
                 {
-                    _logger.LogInformation($"Removing post with slug {slug} after reaching view limit");
-                    _context.AnonymousPosts.Remove(post);
-                }
-                else
-                {
-                    _context.Update(post);
-                }
-
-                await _context.SaveChangesAsync();
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax
+                });
+                _logger.LogInformation($"Generated new visitor ID: {visitorId}");
             }
             else
             {
-                _logger.LogInformation($"IP {clientIp} has already viewed this post. Not incrementing view count.");
+                _logger.LogInformation($"Using existing visitor ID: {visitorId}");
             }
 
-            // Don't return the IP list in the response
-            var result = new
-            {
-                post.Id,
-                post.Content,
-                post.Slug,
-                post.ViewLimit,
-                post.CurrentViews,
-                post.CreatedAt
-            };
+            // Get client IP address
+            string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             
-            _logger.LogInformation($"Returning post data: {JsonSerializer.Serialize(result)}");
-            return result;
+            // Normalize localhost IP addresses (::1 and 127.0.0.1 should be treated the same)
+            if (ipAddress == "::1" || ipAddress == "127.0.0.1")
+            {
+                ipAddress = "localhost";
+            }
+            
+            _logger.LogInformation($"Client IP address: {ipAddress ?? "unknown"}");
+
+            var post = await _postService.GetPostAsync(slug, visitorId, ipAddress);
+            
+            if (post == null)
+            {
+                return NotFound();
+            }
+            
+            return post;
         }
 
         // POST: api/posts
         [HttpPost]
-        public async Task<ActionResult<object>> CreatePost(CreatePostDto postDto)
+        public async Task<ActionResult<object>> CreatePost(IPostService.CreatePostDto postDto)
         {
-            _logger.LogInformation($"Creating post with view limit: {postDto.ViewLimit}");
+            var (post, errorMessage) = await _postService.CreatePostAsync(postDto);
             
-            if (string.IsNullOrWhiteSpace(postDto.Content))
+            if (errorMessage != null)
             {
-                _logger.LogWarning("Attempted to create post with empty content");
-                return BadRequest("Content cannot be empty.");
+                return BadRequest(errorMessage);
             }
-
-            if (postDto.ViewLimit <= 0)
-            {
-                _logger.LogWarning($"Attempted to create post with invalid view limit: {postDto.ViewLimit}");
-                return BadRequest("View limit must be greater than 0.");
-            }
-
-            if (postDto.ViewLimit > 10000)
-            {
-                _logger.LogWarning($"Attempted to create post with view limit exceeding maximum: {postDto.ViewLimit}");
-                return BadRequest("View limit cannot exceed 10000.");
-            }
-
-            // Generate a unique slug
-            string slug;
-            bool slugExists;
-            do
-            {
-                slug = _slugGenerator.GenerateRandomSlug();
-                slugExists = await _context.AnonymousPosts.AnyAsync(p => p.Slug == slug);
-            } while (slugExists);
-
-            _logger.LogInformation($"Generated slug: {slug}");
-
-            var post = new AnonymousPost
-            {
-                Id = Guid.NewGuid(),
-                Content = postDto.Content,
-                Slug = slug,
-                ViewLimit = postDto.ViewLimit,
-                CurrentViews = 0,
-                CreatedAt = DateTime.UtcNow,
-                ViewerIps = new List<string>()
-            };
-
-            _context.AnonymousPosts.Add(post);
-            await _context.SaveChangesAsync();
-
-            // Return the created post without the IP list
-            var result = new
-            {
-                post.Id,
-                post.Content,
-                post.Slug,
-                post.ViewLimit,
-                post.CurrentViews,
-                post.CreatedAt
-            };
             
-            _logger.LogInformation($"Created post with ID: {post.Id}, slug: {post.Slug}");
-            return CreatedAtAction(nameof(GetPost), new { slug = post.Slug }, result);
+            return CreatedAtAction(nameof(GetPost), new { slug = post.Slug }, post);
+        }
+        
+        // GET: api/posts/{slug}/views
+        [HttpGet("{slug}/views")]
+        public async Task<ActionResult<IPostService.ViewCountDto>> GetPostViewCount(string slug)
+        {
+            var viewCount = await _postService.GetPostViewCountAsync(slug);
+            
+            if (viewCount == null)
+            {
+                return NotFound();
+            }
+            
+            return viewCount;
         }
     }
 } 

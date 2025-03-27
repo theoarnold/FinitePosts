@@ -194,8 +194,6 @@ namespace FiniteBlog.Services
         
         public async Task<ViewCountDto?> GetPostViewCountAsync(string slug)
         {
-            _logger.LogInformation($"Getting view count for post with slug: {slug}");
-
             AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
 
             if (post == null)
@@ -204,14 +202,12 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-            // Map to DTO with only view count info
             var viewCountDto = new ViewCountDto
             {
                 CurrentViews = post.CurrentViews,
                 ViewLimit = post.ViewLimit
             };
-            
-            _logger.LogInformation($"Returning view count: {post.CurrentViews}/{post.ViewLimit}");
+
             return viewCountDto;
         }
         
@@ -230,7 +226,6 @@ namespace FiniteBlog.Services
             {
                 currentViews = post.CurrentViews,
                 viewLimit = post.ViewLimit,
-                activeViewers = activeViewers
             });
             
             _logger.LogInformation($"Broadcasted view update to clients for post {slug}: {post.CurrentViews}/{post.ViewLimit} with {activeViewers} active viewers");

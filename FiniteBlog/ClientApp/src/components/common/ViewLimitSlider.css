@@ -1,0 +1,85 @@
+.view-limit-container {
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  color: #000;
+  line-height: 1.4;
+  font-weight: normal;
+  position: relative;
+}
+
+.view-limit-box {
+  background-color: #f0f0f0;
+  padding: 0.75rem;
+  padding-top: 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.view-limit-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.view-limit-slider-container {
+  margin-bottom: 0.5rem;
+}
+
+.view-limit-slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+}
+
+.view-limit-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3498db;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-limit-slider::-webkit-slider-thumb:hover {
+  background: #2980b9;
+}
+
+.view-limit-value {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.view-limit-input-container {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.view-limit-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-right: 4px;
+}
+
+.view-limit-label {
+  color: #666;
+  font-size: 0.9rem;
+} 

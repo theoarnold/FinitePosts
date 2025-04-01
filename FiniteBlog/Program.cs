@@ -19,7 +19,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
         }));
 
-builder.Services.AddScoped<IVisitorService, VisitorService>();
+builder.Services.AddScoped<VisitorCookie>();
 
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 

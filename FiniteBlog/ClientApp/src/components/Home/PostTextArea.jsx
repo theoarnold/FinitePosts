@@ -1,43 +1,41 @@
-import React, { useRef, useState } from 'react';
-import './PostForm.css';
+import React, { useState, useRef, useEffect } from 'react';
 
-const PostForm = ({ 
+const PostTextArea = ({ 
   content, 
   onContentChange, 
-  onSubmit, 
+  viewLimit, 
   isSubmitting, 
-  viewLimit,
-  onFileAttach 
+  onSubmit,
+  fileInputRef
 }) => {
-  const [isTyping, setIsTyping] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [isTyping, setIsTyping] = useState(content.length > 0);
   const [fileAttached, setFileAttached] = useState(false);
   const [fileName, setFileName] = useState('');
-
+  const [showTooltip, setShowTooltip] = useState(false);
+  
   const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
+  
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to get the correct scrollHeight
+      textareaRef.current.style.height = 'auto';
+      // Set the height to scrollHeight to expand the textarea
+      textareaRef.current.style.height = `${Math.max(200, textareaRef.current.scrollHeight)}px`;
+    }
+    
+    // Set typing state based on content
+    setIsTyping(content.length > 0);
+  }, [content]);
 
   const handleContentChange = (e) => {
-    const newContent = e.target.value;
-    onContentChange(newContent);
-    setIsTyping(newContent.length > 0);
+    onContentChange(e.target.value);
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    if (e.target.files && e.target.files[0]) {
       setFileAttached(true);
-      setFileName(file.name);
-      onFileAttach(file);
-    }
-  };
-
-  const handleFileRemove = () => {
-    setFileAttached(false);
-    setFileName('');
-    onFileAttach(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      setFileName(e.target.files[0].name);
     }
   };
 
@@ -47,9 +45,7 @@ const PostForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (content.trim().length > 0 || fileAttached) {
-      onSubmit();
-    }
+    onSubmit();
   };
 
   return (
@@ -64,21 +60,18 @@ const PostForm = ({
           autoComplete="off"
           autoCorrect="on"
           spellCheck="true"
-          className={`text-input ${content ? '' : 'empty-textarea'}`}
-          style={{ 
-            paddingBottom: isTyping ? '65px' : '115px'
-          }}
+          className={`text-input ${content ? '' : 'empty-textarea'} ${isTyping ? 'typing' : 'not-typing'}`}
         />
-        
+
         <div className="buttons-container">
           <div className="button-wrapper">
-            <input 
+            <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
-            <button 
+            <button
               type="button"
               onClick={triggerFileInput}
               className={`file-upload-button ${isTyping ? 'shrink' : 'large'}`}
@@ -88,30 +81,19 @@ const PostForm = ({
             >
               File
             </button>
-            {fileAttached && (
-              <div className="file-info">
-                <span className="file-name">{fileName}</span>
-                <button 
-                  type="button"
-                  onClick={handleFileRemove}
-                  className="remove-file-button"
-                >
-                  ×
-                </button>
-              </div>
-            )}
+            {fileAttached && <span className="file-name">{fileName}</span>}
             {showTooltip && !fileAttached && (
               <div className="file-tooltip">
                 Upload a file - text is optional!
               </div>
             )}
           </div>
-          
+
           {(content.trim().length > 0 || fileAttached) && (
             <div className="button-wrapper">
-              <button 
-                type="submit" 
-                disabled={isSubmitting} 
+              <button
+                type="submit"
+                disabled={isSubmitting}
                 className="post-button"
                 aria-label={isSubmitting ? 'Posting...' : 'Post'}
               >
@@ -125,4 +107,4 @@ const PostForm = ({
   );
 };
 
-export default PostForm; 
+export default PostTextArea; 

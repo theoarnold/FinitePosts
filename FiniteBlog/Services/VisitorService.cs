@@ -1,14 +1,7 @@
 namespace FiniteBlog.Services
 {
-    public class VisitorService : IVisitorService
+    public class VisitorCookie
     {
-        private readonly ILogger<VisitorService> _logger;
-
-        public VisitorService(ILogger<VisitorService> logger)
-        {
-            _logger = logger;
-        }
-
         public string GetOrCreateVisitorId(HttpContext context)
         {
             string visitorId = context.Request.Cookies["visitor_id"];
@@ -23,11 +16,6 @@ namespace FiniteBlog.Services
                     Secure = true,
                     SameSite = SameSiteMode.Lax
                 });
-                _logger.LogInformation($"Generated new visitor ID: {visitorId}");
-            }
-            else
-            {
-                _logger.LogInformation($"Using existing visitor ID: {visitorId}");
             }
 
             return visitorId;

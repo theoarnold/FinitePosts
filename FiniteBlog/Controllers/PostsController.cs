@@ -9,23 +9,23 @@ namespace FiniteBlog.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
-        private readonly IVisitorService _visitorService;
+        private readonly VisitorCookie _visitorCookie;
         private readonly ILogger<PostsController> _logger;
 
         public PostsController(
             IPostService postService,
-            IVisitorService visitorService,
+            VisitorCookie visitorCookie,
             ILogger<PostsController> logger)
         {
             _postService = postService;
-            _visitorService = visitorService;
+            _visitorCookie = visitorCookie;
             _logger = logger;
         }
 
         [HttpGet("{slug}")]
         public async Task<ActionResult<object>> GetPost(string slug)
         {
-            string visitorId = _visitorService.GetOrCreateVisitorId(HttpContext);
+            string visitorId = _visitorCookie.GetOrCreateVisitorId(HttpContext);
             string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             
             if (ipAddress == "::1" || ipAddress == "127.0.0.1")

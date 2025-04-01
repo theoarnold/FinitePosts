@@ -26,23 +26,17 @@ namespace FiniteBlog.Services
 
         public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress)
         {
-            _logger.LogInformation($"Getting post with slug: {slug}");
-            _logger.LogInformation($"Visitor ID: {visitorId ?? "none"}, IP: {ipAddress ?? "unknown"}");
-
             AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
 
             if (post == null)
             {
-                _logger.LogWarning($"Post with slug {slug} not found");
                 return null;
             }
 
             _logger.LogInformation($"Found post. Current views: {post.CurrentViews}/{post.ViewLimit}");
             
-            // Check if we've reached or exceeded the view limit
             if (post.CurrentViews >= post.ViewLimit)
             {
-                _logger.LogInformation($"Post {slug} has reached view limit ({post.ViewLimit}). Deleting post.");
                 await _repository.DeletePostAsync(post);
                 await _repository.SaveChangesAsync();
                 return null;
@@ -50,7 +44,6 @@ namespace FiniteBlog.Services
             
             bool viewCountChanged = false;
             
-            // Get or create a lock for this specific post
             SemaphoreSlim postLock;
             lock (_postLocks)
             {
@@ -70,8 +63,6 @@ namespace FiniteBlog.Services
                     await _repository.HasVisitorViewedPostAsync(post.Id, visitorId);
                 bool hasViewedByIp = !string.IsNullOrEmpty(ipAddress) && 
                     await _repository.HasIpViewedPostAsync(post.Id, ipAddress);
-
-                _logger.LogInformation($"Visitor has viewed by cookie: {hasViewedByCookie}, by IP: {hasViewedByIp}");
 
                 // Only increment view count for completely new visitors (neither cookie nor IP match)
                 if (!(hasViewedByCookie || hasViewedByIp))
@@ -137,32 +128,29 @@ namespace FiniteBlog.Services
             
             if (string.IsNullOrWhiteSpace(createDto.Content))
             {
-                _logger.LogWarning("Attempted to create post with empty content");
                 return (new PostDto(), "Content cannot be empty.");
             }
 
             if (createDto.ViewLimit <= 0)
             {
-                _logger.LogWarning($"Attempted to create post with invalid view limit: {createDto.ViewLimit}");
                 return (new PostDto(), "View limit must be greater than 0.");
             }
 
             if (createDto.ViewLimit > 10000)
             {
-                _logger.LogWarning($"Attempted to create post with view limit exceeding maximum: {createDto.ViewLimit}");
                 return (new PostDto(), "View limit cannot exceed 10000.");
             }
 
             // Generate a unique slug
             string slug;
             bool slugExists;
+            // investigate this
             do
             {
                 slug = SlugGenerator.GenerateRandomSlug();
                 slugExists = await _repository.SlugExistsAsync(slug);
             } while (slugExists);
 
-            _logger.LogInformation($"Generated slug: {slug}");
 
             AnonymousPost post = new AnonymousPost
             {
@@ -213,11 +201,10 @@ namespace FiniteBlog.Services
         
         public async Task BroadcastViewerCountAsync(string slug, int activeViewers)
         {
-            var post = await _repository.GetPostBySlugAsync(slug);
+            AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
             
             if (post == null)
             {
-                _logger.LogWarning($"Post with slug {slug} not found when broadcasting view count");
                 return;
             }
             
@@ -227,8 +214,6 @@ namespace FiniteBlog.Services
                 currentViews = post.CurrentViews,
                 viewLimit = post.ViewLimit,
             });
-            
-            _logger.LogInformation($"Broadcasted view update to clients for post {slug}: {post.CurrentViews}/{post.ViewLimit} with {activeViewers} active viewers");
         }
 
         // Method that doesn't depend on active viewers count
@@ -240,8 +225,6 @@ namespace FiniteBlog.Services
                 currentViews = post.CurrentViews,
                 viewLimit = post.ViewLimit
             });
-            
-            _logger.LogInformation($"Broadcasted view count update to clients for post {post.Slug}: {post.CurrentViews}/{post.ViewLimit}");
         }
     }
 } 

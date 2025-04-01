@@ -1021,4 +1021,279 @@ button:disabled {
 .view-limit-slider-container.locked-input::after {
   background-color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-} 
+}
+
+/* Card and containers */
+.card {
+    /* Add any card-specific styles here */
+}
+
+.content-container {
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+    color: #000;
+    line-height: 1.4;
+    font-weight: normal;
+    position: relative;
+}
+
+.slider-wrapper {
+    background-color: #f0f0f0;
+    padding: 0.75rem;
+    padding-top: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* Error message */
+.error-message {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+/* Slider container */
+.view-limit-slider-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+    .view-limit-slider-container.locked-input {
+        /* Add styles for locked input state */
+    }
+
+.view-limit-slider {
+    /* Basic slider styles */
+}
+
+    .view-limit-slider.unlocked {
+        /* Styles for unlocked slider */
+    }
+
+    .view-limit-slider.locked {
+        /* Styles for locked slider */
+    }
+
+/* View limit value area */
+.view-limit-value {
+    /* Container for the input and label */
+}
+
+.view-limit-track {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    width: 100%;
+}
+
+    .view-limit-track.mobile {
+        /* Mobile-specific transforms will be handled via inline style */
+    }
+
+    .view-limit-track.desktop {
+        /* Desktop-specific transforms will be handled via inline style */
+    }
+
+.view-limit-input {
+    /* Styles for the input field */
+}
+
+.view-limit-label {
+    /* Styles for the "views" label */
+}
+
+/* Textarea and button container */
+.textarea-container {
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.text-input {
+    padding-bottom: 115px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+    .text-input.typing {
+        padding-bottom: 65px;
+    }
+
+    .text-input.empty-textarea {
+        /* Styles for empty textarea */
+    }
+
+/* Button styles */
+.buttons-container {
+    /* Container for buttons */
+}
+
+.button-wrapper {
+    /* Wrapper for individual buttons */
+}
+
+.file-upload-button {
+    opacity: 0.85;
+    color: white;
+    font-size: 0.9rem;
+}
+
+    .file-upload-button.shrink {
+        /* Styles for shrunk button */
+    }
+
+    .file-upload-button.large {
+        /* Styles for large button */
+    }
+
+.file-name {
+    /* Styles for file name display */
+}
+
+.file-tooltip {
+    /* Styles for tooltip */
+}
+
+.post-button {
+    /* Styles for post button */
+}
+/* Post card container */
+.post-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+}
+
+/* Stats counter at the top */
+.personal-viewer-counter {
+    margin-bottom: 1.5rem;
+    margin-top: -1.5rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding: 0.75rem 1.5rem;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Marquee for stats */
+.stats-marquee {
+    /* Add any additional styles for the marquee container */
+}
+
+.stats-marquee-content {
+    /* Styles for the scrolling content */
+}
+
+.stats-divider {
+    /* Styles for the divider */
+}
+
+.diamond {
+    margin: 0 2rem;
+}
+
+/* Post content area */
+.post-content {
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+/* Share functionality */
+.share-container {
+    margin: 0.5rem 0;
+}
+
+.share-button {
+    /* Styles for share button */
+}
+
+.share-dropdown {
+    /* Base styles for the dropdown */
+}
+
+    .share-dropdown.expanding {
+        /* Styles when expanding animation is active */
+    }
+
+.share-option {
+    /* Base styles for all share options */
+}
+
+    .share-option.twitter {
+        /* Twitter-specific styles */
+    }
+
+    .share-option.facebook {
+        /* Facebook-specific styles */
+    }
+
+    .share-option.linkedin {
+        /* LinkedIn-specific styles */
+    }
+
+    .share-option.email {
+        /* Email-specific styles */
+    }
+
+    .share-option.copy {
+        /* Copy-specific styles */
+    }
+
+.copy-icon {
+    position: absolute;
+    left: 25%;
+    transform: translateX(-50%);
+}
+
+.copy-success {
+    color: green;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Post footer */
+.post-footer {
+    background-color: #f0f0f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    width: 98%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.post-footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Warning message */
+.final-view-warning {
+    color: red;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 13px;
+}

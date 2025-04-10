@@ -15,7 +15,7 @@ namespace FiniteBlog.Services
                 rng.GetBytes(random);
             }
 
-            var result = new char[SlugLength];
+            char[] result = new char[SlugLength];
             for (int i = 0; i < SlugLength; i++)
             {
                 result[i] = AllowedChars[random[i] % AllowedChars.Length];

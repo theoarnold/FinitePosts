@@ -19,10 +19,6 @@ namespace FiniteBlog.Hubs
 
         public void AddConnection(string connectionId, string slug, string visitorId)
         {
-            // Store the connection to post mapping
-            _connections.TryAdd(connectionId, slug);
-            _logger.LogInformation($"Added connection {connectionId} for post {slug}");
-            
             if (!string.IsNullOrEmpty(visitorId))
             {
                 // Store the connection to visitor mapping
@@ -40,7 +36,6 @@ namespace FiniteBlog.Hubs
             
             // Get the updated count and broadcast immediately
             int activeViewers = GetActiveViewerCount(slug);
-            _logger.LogInformation($"Active viewers for {slug}: {activeViewers}");
             
             // Fire and forget - we don't want to await this
             _ = _hubContext.Clients.Group(slug).SendAsync("ReceiveViewUpdate", new { activeViewers });
@@ -73,7 +68,6 @@ namespace FiniteBlog.Hubs
                 
                 // Get the updated count after removal
                 int activeViewers = GetActiveViewerCount(slug);
-                _logger.LogInformation($"Active viewers for {slug} after removal: {activeViewers}");
                 
                 // Broadcast the updated count
                 await _hubContext.Clients.Group(slug).SendAsync("ReceiveViewUpdate", new { activeViewers });

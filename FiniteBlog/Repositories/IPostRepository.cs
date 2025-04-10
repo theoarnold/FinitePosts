@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using FiniteBlog.Models;
 
 namespace FiniteBlog.Repositories
@@ -23,5 +21,7 @@ namespace FiniteBlog.Repositories
         Task<bool> HasIpViewedPostAsync(Guid postId, string ipAddress);
 
         Task AddPostViewerAsync(PostViewer viewer);
+
+        Task IncrementViewCountAsync(Guid postId);
     }
 } 

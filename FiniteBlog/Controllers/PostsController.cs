@@ -57,18 +57,5 @@ namespace FiniteBlog.Controllers
             
             return CreatedAtAction(nameof(GetPost), new { slug = post.Slug }, post);
         }
-        
-        [HttpGet("{slug}/views")]
-        public async Task<ActionResult<ViewCountDto>> GetPostViewCount(string slug)
-        {
-            var viewCount = await _postService.GetPostViewCountAsync(slug);
-            
-            if (viewCount == null)
-            {
-                return NotFound();
-            }
-            
-            return viewCount;
-        }
     }
 } 

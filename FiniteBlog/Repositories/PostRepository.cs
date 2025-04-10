@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using FiniteBlog.Data;
 using FiniteBlog.Models;
-using FiniteBlog.Repositories;
-using System.Threading.Tasks;
 
 namespace FiniteBlog.Repositories
 {
@@ -69,6 +67,14 @@ namespace FiniteBlog.Repositories
         {
             return await _context.PostViewers
                 .AnyAsync(pv => pv.PostId == postId && pv.IpAddress == ipAddress);
+        }
+
+        public async Task IncrementViewCountAsync(Guid postId)
+        {
+            await _context.AnonymousPosts
+                .Where(p => p.Id == postId)
+                .ExecuteUpdateAsync(p =>
+                    p.SetProperty(x => x.CurrentViews, x => x.CurrentViews + 1));
         }
     }
 } 

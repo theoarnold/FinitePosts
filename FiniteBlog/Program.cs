@@ -3,8 +3,6 @@ using FiniteBlog.Services;
 using FiniteBlog.Repositories;
 using FiniteBlog.Hubs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Microsoft.AspNetCore.CookiePolicy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,16 +76,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<PostHub>("/posthub");
-
-// Comment out SPA middleware
-//app.UseSpa(spa =>
-//{
-//    spa.Options.SourcePath = "ClientApp";
-//
-//    if (app.Environment.IsDevelopment())
-//    {
-//        spa.UseReactDevelopmentServer(npmScript: "start");
-//    }
-//});
 
 app.Run();

@@ -1,5 +1,3 @@
-using System;
-
 namespace FiniteBlog.Models
 {
     public class PostViewer

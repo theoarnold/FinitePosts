@@ -9,7 +9,7 @@ namespace FiniteBlog.Services
 
         public static string GenerateRandomSlug()
         {
-            var random = new byte[SlugLength];
+            byte[] random = new byte[SlugLength];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(random);

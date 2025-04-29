@@ -69,12 +69,12 @@ namespace FiniteBlog.Repositories
                 .AnyAsync(pv => pv.PostId == postId && pv.IpAddress == ipAddress);
         }
 
-        public async Task IncrementViewCountAsync(Guid postId)
+        public Task IncrementViewCountAsync(Guid postId)
         {
-            await _context.AnonymousPosts
-                .Where(p => p.Id == postId)
-                .ExecuteUpdateAsync(p =>
-                    p.SetProperty(x => x.CurrentViews, x => x.CurrentViews + 1));
+            AnonymousPost? post = _context.AnonymousPosts.Find(postId);
+            if (post != null) { post.CurrentViews += 1; }
+
+            return Task.CompletedTask;
         }
     }
 } 

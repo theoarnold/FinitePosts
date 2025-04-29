@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import ViewLimitSlider from './ViewLimitSlider';
-import PostTextArea from './PostTextArea';
+import TextArea from './TextArea';
 
-const PostForm = ({ onSubmit, isSubmitting, error }) => {
+const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
   const [content, setContent] = useState('');
   const [viewLimit, setViewLimit] = useState(15);
   const fileInputRef = useRef(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     // Allow empty content if a file is attached
     if (!content.trim() && !fileInputRef.current.files.length) {
       // Display error in parent component
@@ -29,15 +29,15 @@ const PostForm = ({ onSubmit, isSubmitting, error }) => {
 
     // Submit to parent component
     onSubmit(postData);
-  };
+  }, [content, viewLimit, onSubmit]);
 
-  const handleViewLimitChange = (newViewLimit) => {
+  const handleViewLimitChange = useCallback((newViewLimit) => {
     setViewLimit(newViewLimit);
-  };
+  }, []);
 
-  const handleContentChange = (newContent) => {
+  const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
-  };
+  }, []);
 
   return (
     <div className="card">
@@ -48,7 +48,7 @@ const PostForm = ({ onSubmit, isSubmitting, error }) => {
       
       {error && <div className="error-message">{error}</div>}
       
-      <PostTextArea 
+      <TextArea 
         content={content}
         onContentChange={handleContentChange}
         viewLimit={viewLimit}
@@ -58,6 +58,8 @@ const PostForm = ({ onSubmit, isSubmitting, error }) => {
       />
     </div>
   );
-};
+});
+
+PostForm.displayName = 'PostForm';
 
 export default PostForm; 

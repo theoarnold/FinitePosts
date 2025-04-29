@@ -64,17 +64,15 @@ namespace FiniteBlog.Services
                     };
 
                     await _repository.AddPostViewerAsync(viewer);
-                    await _repository.SaveChangesAsync();
-
                     await _repository.IncrementViewCountAsync(post.Id);
 
                     if (post != null && post.CurrentViews +1 >= post.ViewLimit)
                     {
                         _logger.LogInformation($"Post {slug} has reached view limit ({post.ViewLimit}). Deleting post.");
                         await _repository.DeletePostAsync(post);
-                        await _repository.SaveChangesAsync();
                     }
 
+                    await _repository.SaveChangesAsync();
                     await BroadcastViewCountUpdateAsync(post);
                 }
             }
@@ -150,7 +148,7 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-            var viewCountDto = new ViewCountDto
+            ViewCountDto viewCountDto = new ViewCountDto
             {
                 CurrentViews = post.CurrentViews,
                 ViewLimit = post.ViewLimit

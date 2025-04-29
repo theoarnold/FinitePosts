@@ -27,13 +27,6 @@ namespace FiniteBlog.Controllers
         {
             string visitorId = _visitorCookie.GetOrCreateVisitorId(HttpContext);
             string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            
-            if (ipAddress == "::1" || ipAddress == "127.0.0.1")
-            {
-                ipAddress = "localhost";
-            }
-            
-            _logger.LogInformation($"Client IP address: {ipAddress ?? "unknown"}");
 
             PostDto? post = await _postService.GetPostAsync(slug, visitorId, ipAddress);
             

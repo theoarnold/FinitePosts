@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 
-const PostTextArea = ({ 
+const PostTextArea = memo(({ 
   content, 
   onContentChange, 
   viewLimit, 
@@ -28,25 +28,25 @@ const PostTextArea = ({
     setIsTyping(content.length > 0);
   }, [content]);
 
-  const handleContentChange = (e) => {
+  const handleContentChange = useCallback((e) => {
     onContentChange(e.target.value);
-  };
+  }, [onContentChange]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = useCallback((e) => {
     if (e.target.files && e.target.files[0]) {
       setFileAttached(true);
       setFileName(e.target.files[0].name);
     }
-  };
+  }, []);
 
-  const triggerFileInput = () => {
+  const triggerFileInput = useCallback(() => {
     fileInputRef.current.click();
-  };
+  }, [fileInputRef]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     onSubmit();
-  };
+  }, [onSubmit]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -105,6 +105,8 @@ const PostTextArea = ({
       </div>
     </form>
   );
-};
+});
+
+PostTextArea.displayName = 'PostTextArea';
 
 export default PostTextArea; 

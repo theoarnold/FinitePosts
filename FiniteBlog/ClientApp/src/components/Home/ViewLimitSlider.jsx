@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 
 // Function to convert slider value (0-100) to view limit using a custom scale
 const calculateViewLimit = (sliderValue, highRangeUnlocked) => {
@@ -54,7 +54,7 @@ const calculateSliderValue = (viewLimit, highRangeUnlocked) => {
   }
 };
 
-const ViewLimitSlider = ({ viewLimit, onViewLimitChange }) => {
+const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {
   const [highRangeUnlocked, setHighRangeUnlocked] = useState(false);
   const [sliderValue, setSliderValue] = useState(calculateSliderValue(viewLimit, false));
   const [ignoreMouseMove, setIgnoreMouseMove] = useState(false);
@@ -238,6 +238,8 @@ const ViewLimitSlider = ({ viewLimit, onViewLimitChange }) => {
       </div>
     </div>
   );
-};
+});
+
+ViewLimitSlider.displayName = 'ViewLimitSlider';
 
 export default ViewLimitSlider; 

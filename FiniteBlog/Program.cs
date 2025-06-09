@@ -2,6 +2,7 @@ using FiniteBlog.Data;
 using FiniteBlog.Services;
 using FiniteBlog.Repositories;
 using FiniteBlog.Hubs;
+using FiniteBlog.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,12 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 
 builder.Services.AddScoped<IPostService, PostService>();
 
+// Configure Azure Storage
+builder.Services.Configure<AzureStorageConfig>(
+    builder.Configuration.GetSection(AzureStorageConfig.SectionName));
+
+builder.Services.AddScoped<IBlobStorageService, AzureBlobStorageService>();
+
 builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<FiniteBlog.Hubs.ConnectionManager>();
@@ -43,6 +50,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

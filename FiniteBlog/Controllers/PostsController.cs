@@ -39,8 +39,62 @@ namespace FiniteBlog.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> CreatePost(CreatePostDto postDto)
+        [RequestSizeLimit(10 * 1024 * 1024)] // 10MB limit
+        public async Task<ActionResult<object>> CreatePost()
         {
+            CreatePostDto postDto;
+            
+            // Check if request is multipart (has file) or JSON (text only)
+            if (Request.ContentType?.StartsWith("multipart/form-data") == true)
+            {
+                // Handle multipart form data (with potential file upload)
+                var content = Request.Form["content"].ToString();
+                var viewLimitStr = Request.Form["viewLimit"].ToString();
+                var file = Request.Form.Files.GetFile("file");
+                
+                // Debug logging
+                _logger.LogInformation("Multipart request received. Content: '{Content}', ViewLimit: '{ViewLimit}', File count: {FileCount}", 
+                    content, viewLimitStr, Request.Form.Files.Count);
+                
+                if (Request.Form.Files.Count > 0)
+                {
+                    foreach (var formFile in Request.Form.Files)
+                    {
+                        _logger.LogInformation("Form file key: '{Key}', Name: '{Name}', Size: {Size}", 
+                            formFile.Name, formFile.FileName, formFile.Length);
+                    }
+                }
+                
+                if (!int.TryParse(viewLimitStr, out int viewLimit))
+                {
+                    return BadRequest("Invalid view limit value.");
+                }
+                
+                postDto = new CreatePostDto
+                {
+                    Content = content,
+                    ViewLimit = viewLimit,
+                    File = file
+                };
+            }
+            else
+            {
+                // Handle JSON data (text only posts)
+                try
+                {
+                    postDto = await Request.ReadFromJsonAsync<CreatePostDto>();
+                    if (postDto == null)
+                    {
+                        return BadRequest("Invalid request data.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error parsing JSON request");
+                    return BadRequest("Invalid JSON data.");
+                }
+            }
+            
             var (post, errorMessage) = await _postService.CreatePostAsync(postDto);
             
             if (errorMessage != null)

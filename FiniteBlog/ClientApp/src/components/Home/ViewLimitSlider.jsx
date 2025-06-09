@@ -101,6 +101,17 @@ const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {
     };
   }, [isDragging]);
 
+  // Auto-reset ignoreMouseMove after a short delay (fallback for mobile)
+  useEffect(() => {
+    if (ignoreMouseMove) {
+      const timer = setTimeout(() => {
+        setIgnoreMouseMove(false);
+      }, 1000); // Reset after 1 second if user doesn't click
+      
+      return () => clearTimeout(timer);
+    }
+  }, [ignoreMouseMove]);
+
   // Update manual input value when viewLimit changes
   useEffect(() => {
     setManualInputValue(viewLimit.toString());
@@ -151,6 +162,14 @@ const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {
   // Handle click on slider
   const handleSliderClick = () => {
     // When the user clicks after unlocking, start responding to mouse movements again
+    if (ignoreMouseMove) {
+      setIgnoreMouseMove(false);
+    }
+  };
+
+  // Handle touch events for mobile
+  const handleSliderTouch = () => {
+    // Same as click - reset ignoreMouseMove on touch
     if (ignoreMouseMove) {
       setIgnoreMouseMove(false);
     }
@@ -212,6 +231,8 @@ const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {
             onMouseDown={handleSliderMouseDown}
             onMouseUp={handleSliderMouseUp}
             onClick={handleSliderClick}
+            onTouchStart={handleSliderTouch}
+            onTouchEnd={handleSliderTouch}
             className={`view-limit-slider ${highRangeUnlocked ? 'unlocked' : 'locked'}`}
             aria-label="Set view limit"
           />
@@ -220,7 +241,7 @@ const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {
           <div className={`view-limit-track ${isMobile ? 'mobile' : 'desktop'}`}
             style={{
               transform: isMobile
-                ? `translateX(${Math.min(70, sliderValue)}%)`
+                ? `translateX(${Math.min(55, sliderValue)}%)`
                 : `translateX(${Math.min(77, sliderValue)}%)`
             }}
           >

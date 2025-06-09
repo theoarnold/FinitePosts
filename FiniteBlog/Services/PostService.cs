@@ -11,15 +11,18 @@ namespace FiniteBlog.Services
         private readonly IPostRepository _repository;
         private readonly ILogger<PostService> _logger;
         private readonly IHubContext<PostHub> _hubContext;
+        private readonly IBlobStorageService _blobStorageService;
 
         public PostService(
             IPostRepository repository,
             ILogger<PostService> logger,
-            IHubContext<PostHub> hubContext)
+            IHubContext<PostHub> hubContext,
+            IBlobStorageService blobStorageService)
         {
             _repository = repository;
             _logger = logger;
             _hubContext = hubContext;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress)
@@ -37,7 +40,11 @@ namespace FiniteBlog.Services
                 Slug = post.Slug,
                 ViewLimit = post.ViewLimit,
                 CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                AttachedFileName = post.AttachedFileName,
+                AttachedFileUrl = post.AttachedFileUrl,
+                AttachedFileContentType = post.AttachedFileContentType,
+                AttachedFileSizeBytes = post.AttachedFileSizeBytes
             };
 
             await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
@@ -60,7 +67,7 @@ namespace FiniteBlog.Services
                         PostId = post.Id,
                         VisitorId = visitorId ?? string.Empty,
                         IpAddress = ipAddress ?? string.Empty,
-                        ViewedAt = DateTime.UtcNow
+                        ViewedAt = DateTime.Now
                     };
 
                     await _repository.AddPostViewerAsync(viewer);
@@ -84,11 +91,13 @@ namespace FiniteBlog.Services
 
         public async Task<(PostDto Post, string? ErrorMessage)> CreatePostAsync(CreatePostDto createDto)
         {
-            _logger.LogInformation($"Creating post with view limit: {createDto.ViewLimit}");
+            _logger.LogInformation($"Creating post with view limit: {createDto.ViewLimit}, Content length: {createDto.Content?.Length ?? 0}, Has file: {createDto.File != null}");
             
-            if (string.IsNullOrWhiteSpace(createDto.Content))
+            // Validate that either content or file is provided
+            if (string.IsNullOrWhiteSpace(createDto.Content) && createDto.File == null)
             {
-                return (new PostDto(), "Content cannot be empty.");
+                _logger.LogWarning("Post creation failed: No content or file provided. Content: '{Content}', File: {HasFile}", createDto.Content, createDto.File != null);
+                return (new PostDto(), "Either content or a file must be provided.");
             }
 
             if (createDto.ViewLimit <= 0)
@@ -101,6 +110,17 @@ namespace FiniteBlog.Services
                 return (new PostDto(), "View limit cannot exceed 10000.");
             }
 
+            // Handle file upload if present
+            BlobUploadResult? fileUploadResult = null;
+            if (createDto.File != null)
+            {
+                fileUploadResult = await _blobStorageService.UploadFileAsync(createDto.File);
+                if (!fileUploadResult.Success)
+                {
+                    return (new PostDto(), fileUploadResult.ErrorMessage ?? "File upload failed.");
+                }
+            }
+
             string slug;
             bool slugExists;
 
@@ -110,32 +130,61 @@ namespace FiniteBlog.Services
                 slugExists = await _repository.SlugExistsAsync(slug);
             } while (slugExists);
 
-
             AnonymousPost post = new()
             {
                 Id = Guid.NewGuid(),
-                Content = createDto.Content,
+                Content = createDto.Content ?? string.Empty,
                 Slug = slug,
                 ViewLimit = createDto.ViewLimit,
                 CurrentViews = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                AttachedFileName = fileUploadResult?.FileName,
+                AttachedFileUrl = fileUploadResult?.Url,
+                AttachedFileContentType = fileUploadResult?.ContentType,
+                AttachedFileSizeBytes = fileUploadResult?.FileSizeBytes
             };
 
-            await _repository.CreatePostAsync(post);
-            await _repository.SaveChangesAsync();
-
-            PostDto resultDto = new()
+            try
             {
-                Id = post.Id,
-                Content = post.Content,
-                Slug = post.Slug,
-                ViewLimit = post.ViewLimit,
-                CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt
-            };
-            
-            _logger.LogInformation($"Created post with ID: {post.Id}, slug: {post.Slug}");
-            return (resultDto, null);
+                await _repository.CreatePostAsync(post);
+                await _repository.SaveChangesAsync();
+
+                PostDto resultDto = new()
+                {
+                    Id = post.Id,
+                    Content = post.Content,
+                    Slug = post.Slug,
+                    ViewLimit = post.ViewLimit,
+                    CurrentViews = post.CurrentViews,
+                    CreatedAt = post.CreatedAt,
+                    AttachedFileName = post.AttachedFileName,
+                    AttachedFileUrl = post.AttachedFileUrl,
+                    AttachedFileContentType = post.AttachedFileContentType,
+                    AttachedFileSizeBytes = post.AttachedFileSizeBytes
+                };
+                
+                _logger.LogInformation($"Created post with ID: {post.Id}, slug: {post.Slug}");
+                return (resultDto, null);
+            }
+            catch (Exception ex)
+            {
+                // If post creation fails and we uploaded a file, clean it up
+                if (fileUploadResult?.Success == true && !string.IsNullOrEmpty(fileUploadResult.FileName))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteFileAsync(fileUploadResult.FileName);
+                        _logger.LogInformation("Cleaned up uploaded file after post creation failure: {FileName}", fileUploadResult.FileName);
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        _logger.LogWarning(cleanupEx, "Failed to clean up uploaded file after post creation failure: {FileName}", fileUploadResult.FileName);
+                    }
+                }
+                
+                _logger.LogError(ex, "Error creating post");
+                return (new PostDto(), "An error occurred while creating the post.");
+            }
         }
         
         public async Task<ViewCountDto?> GetPostViewCountAsync(string slug)

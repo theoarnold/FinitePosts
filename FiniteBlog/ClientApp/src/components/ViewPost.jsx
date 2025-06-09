@@ -1,10 +1,11 @@
 ﻿import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import * as signalR from '@microsoft/signalr';
 import PostStats from './ViewPost/PostStats';
 import ShareButton from './ViewPost/ShareButton';
 import PostFooter from './ViewPost/PostFooter';
+import ShareUrlPopup from './common/ShareUrlPopup';
 
 // API base URL for direct calls - adjust based on environment
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -13,6 +14,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 const ViewPost = memo(() => {
     const { slug } = useParams();
+    const location = useLocation();
     const [post, setPost] = useState(null);
     const [error, setError] = useState('');
     const [isDeleted, setIsDeleted] = useState(false);
@@ -21,6 +23,7 @@ const ViewPost = memo(() => {
     const [activeViewers, setActiveViewers] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [hasFetched, setHasFetched] = useState(false);
+    const [showSharePopup, setShowSharePopup] = useState(false);
     const connectionRef = useRef(null);
     const abortControllerRef = useRef(null);
 
@@ -125,6 +128,23 @@ const ViewPost = memo(() => {
                     setViewerNumber(newViewerNumber);
                 }
 
+                // Check if this is a new post (just created) by looking at the current views count
+                // Show popup if this is a new view (currentViews <= 1) and we haven't seen this post before
+                const isNewPost = response.data.currentViews <= 1 && !savedViewerNumber;
+                console.log('Popup debug:', {
+                    currentViews: response.data.currentViews,
+                    savedViewerNumber: savedViewerNumber,
+                    isNewPost: isNewPost,
+                    slug: slug
+                });
+                
+                if (isNewPost) {
+                    console.log('Showing share popup for new post');
+                    setShowSharePopup(true);
+                } else {
+                    console.log('Not showing popup:', { currentViews: response.data.currentViews, savedViewerNumber: !!savedViewerNumber });
+                }
+
                 setupSignalR(response.data);
                 setHasFetched(true);
             })
@@ -203,7 +223,7 @@ const ViewPost = memo(() => {
                 {post.content}
             </div>
 
-            <ShareButton slug={slug} />
+            <ShareButton slug={slug} onShareClick={() => setShowSharePopup(true)} />
             
             <PostFooter 
                 createdAt={post.createdAt}
@@ -215,6 +235,12 @@ const ViewPost = memo(() => {
                     Warning: This is the last view. The post will be deleted after this.
                 </p>
             )}
+
+            <ShareUrlPopup 
+                isVisible={showSharePopup}
+                onClose={() => setShowSharePopup(false)}
+                postSlug={slug}
+            />
         </div>
     );
 });

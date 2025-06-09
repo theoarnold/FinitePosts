@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, memo } from 'react';
 import ViewLimitSlider from './ViewLimitSlider';
-import TextArea from './TextArea';
+import PostTextArea from './TextArea';
 
 const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
   const [content, setContent] = useState('');
@@ -40,7 +40,7 @@ const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
   }, []);
 
   return (
-    <div className="card">
+    <div className="card post-form">
       <ViewLimitSlider 
         viewLimit={viewLimit} 
         onViewLimitChange={handleViewLimitChange} 
@@ -48,7 +48,7 @@ const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
       
       {error && <div className="error-message">{error}</div>}
       
-      <TextArea 
+      <PostTextArea 
         content={content}
         onContentChange={handleContentChange}
         viewLimit={viewLimit}

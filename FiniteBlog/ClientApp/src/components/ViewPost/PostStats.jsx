@@ -14,11 +14,11 @@ const PostStats = memo(({
         <div className="stats-marquee-content">
           {[...Array(3)].map((_, i) => (
             <React.Fragment key={i}>
-              <span>You are viewer {viewerNumber}/{viewLimit}</span>
+              <span>You're Viewer {viewerNumber}/{viewLimit}</span>
               <span className="stats-divider">|</span>
-              <span>{activeViewers} {activeViewers === 1 ? 'Current Viewer' : 'Current Viewers'}</span>
+              <span>{activeViewers} Viewing Now</span>
               <span className="stats-divider">|</span>
-              <span>{currentViews}/{viewLimit} Total views</span>
+              <span>{currentViews}/{viewLimit} Views</span>
               <span className="diamond">◆</span>
             </React.Fragment>
           ))}

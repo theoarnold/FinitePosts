@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 
 const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
   const [copied, setCopied] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [currentView, setCurrentView] = useState('share'); // 'share' or 'qr'
+  const qrCanvasRef = useRef(null);
   
   if (!isVisible && !isClosing) return null;
 
@@ -10,8 +13,19 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
+      setCurrentView('share'); // Reset to share view for next time
       onClose();
     }, 300); // Match the animation duration
+  };
+
+  const handleDownloadQR = () => {
+    if (qrCanvasRef.current) {
+      const canvas = qrCanvasRef.current;
+      const link = document.createElement('a');
+      link.download = `qr-code-${postSlug}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    }
   };
   
   const fullUrl = `test.com/${postSlug}`;
@@ -93,55 +107,105 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     <div className={`popup-overlay ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
       <div className="popup-container" onClick={(e) => e.stopPropagation()}>
         <div className="popup-content">
-          <p>Share this link to let others view your post:</p>
-          
-          <div className="url-container">
-            <div className="url-display">
-              {fullUrl}
-            </div>
-            <button 
-              onClick={handleCopy}
-              className={`copy-button ${copied ? 'copied' : ''}`}
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
+          {currentView === 'share' ? (
+            // Share View
+            <>
+              <p>Share this link to let others view your post:</p>
+              
+              <div className="url-container">
+                <div className="url-display">
+                  {fullUrl}
+                </div>
+                <button 
+                  onClick={handleCopy}
+                  className={`copy-button ${copied ? 'copied' : ''}`}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
 
-          <div className="social-share-buttons">
-            <button 
-              onClick={() => handleSocialShare('twitter')}
-              className="social-button twitter"
-            >
-              Twitter
-            </button>
-            <button 
-              onClick={() => handleSocialShare('facebook')}
-              className="social-button facebook"
-            >
-              Facebook
-            </button>
-            <button 
-              onClick={() => handleSocialShare('linkedin')}
-              className="social-button linkedin"
-            >
-              LinkedIn
-            </button>
-            <button 
-              onClick={() => handleSocialShare('instagram')}
-              className="social-button instagram"
-            >
-              Instagram
-            </button>
-            <button 
-              onClick={() => handleSocialShare('email')}
-              className="social-button email"
-            >
-              Email
-            </button>
-            <button onClick={handleClose} className="social-button close-button">
-              Close
-            </button>
-          </div>
+              <div className="social-share-buttons">
+                <button 
+                  onClick={() => handleSocialShare('twitter')}
+                  className="social-button twitter"
+                >
+                  Twitter
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('facebook')}
+                  className="social-button facebook"
+                >
+                  Facebook
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('linkedin')}
+                  className="social-button linkedin"
+                >
+                  LinkedIn
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('instagram')}
+                  className="social-button instagram"
+                >
+                  Instagram
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('email')}
+                  className="social-button email"
+                >
+                  Email
+                </button>
+                <button 
+                  onClick={() => setCurrentView('qr')}
+                  className="social-button qr-button"
+                >
+                  QR Code
+                </button>
+                <button onClick={handleClose} className="social-button close-button">
+                  Close
+                </button>
+              </div>
+            </>
+          ) : (
+            // QR Code View
+            <>
+              <div className="qr-container">
+                <div className="qr-code-wrapper">
+                  <QRCodeSVG 
+                    value={fullUrl}
+                    size={250}
+                    level="M"
+                    includeMargin={true}
+                    title="Scan to access this post"
+                  />
+                  {/* Hidden canvas for download functionality */}
+                  <QRCodeCanvas 
+                    ref={qrCanvasRef}
+                    value={fullUrl}
+                    size={400}
+                    level="M"
+                    includeMargin={true}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              </div>
+              
+              <div className="qr-actions">
+                <button 
+                  onClick={handleDownloadQR}
+                  className="download-button"
+                >
+                  Download QR Code
+                </button>
+                <button 
+                  onClick={() => setCurrentView('share')}
+                  className="back-button"
+                >
+                  Back
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

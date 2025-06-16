@@ -56,8 +56,13 @@ namespace FiniteBlog.Services
                 await _containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
 
                 // Generate secure filename
+<<<<<<< HEAD
                 string fileName = customFileName ?? GenerateSecureFileName(file.FileName);
                 BlobClient blobClient = _containerClient.GetBlobClient(fileName);
+=======
+                var fileName = customFileName ?? GenerateSecureFileName(file.FileName);
+                var blobClient = _containerClient.GetBlobClient(fileName);
+>>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 
                 // Upload with metadata
                 var blobHttpHeaders = new BlobHttpHeaders
@@ -66,7 +71,11 @@ namespace FiniteBlog.Services
                     CacheControl = "public, max-age=31536000" // 1 year cache
                 };
 
+<<<<<<< HEAD
                 Dictionary<string, string> metadata = new Dictionary<string, string>
+=======
+                var metadata = new Dictionary<string, string>
+>>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
                 {
                     { "OriginalFileName", file.FileName },
                     { "UploadTimestamp", DateTimeOffset.UtcNow.ToString("O") },
@@ -74,7 +83,11 @@ namespace FiniteBlog.Services
                 };
 
                 using var stream = file.OpenReadStream();
+<<<<<<< HEAD
                 BlobContentInfo response = await blobClient.UploadAsync(
+=======
+                var response = await blobClient.UploadAsync(
+>>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
                     stream, 
                     new BlobUploadOptions
                     {

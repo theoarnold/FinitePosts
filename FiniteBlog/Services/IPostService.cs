@@ -12,7 +12,10 @@ namespace FiniteBlog.Services
         Task<ViewCountDto?> GetPostViewCountAsync(string slug);
 
         Task BroadcastViewCountUpdateAsync(AnonymousPost post);
+<<<<<<< HEAD
 
         Task<List<FeedPostDto>> GetRandomPostsForFeedAsync(int count);
+=======
+>>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
     }
 } 

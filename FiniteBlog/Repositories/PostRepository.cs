@@ -76,6 +76,7 @@ namespace FiniteBlog.Repositories
 
             return Task.CompletedTask;
         }
+<<<<<<< HEAD
 
         public async Task<List<AnonymousPost>> GetRandomPostsAsync(int count)
         {
@@ -87,5 +88,7 @@ namespace FiniteBlog.Repositories
                 .Take(count)
                 .ToListAsync();
         }
+=======
+>>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
     }
 } 

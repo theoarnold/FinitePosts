@@ -127,11 +127,7 @@ textarea {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   background: var(--glass-bg);
-<<<<<<< HEAD
   background-color: rgba(248, 240, 215, 0.75);
-=======
-  background-color: rgba(128, 128, 128, 0.1);
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
   backdrop-filter: blur(10px);
   color: var(--text-primary);
   outline: none;
@@ -487,7 +483,6 @@ button:disabled {
   }
   
   .view-counter {
-<<<<<<< HEAD
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
@@ -496,14 +491,6 @@ button:disabled {
   .view-counter div:first-child {
     margin-bottom: 0;
     margin-right: 0.5rem;
-=======
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .view-counter div:first-child {
-    margin-bottom: 0.5rem;
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
   }
   
   .view-limit-controls {
@@ -726,10 +713,7 @@ button:disabled {
   align-items: center;
   height: 36px;
   pointer-events: auto; /* Make buttons clickable */
-<<<<<<< HEAD
   overflow: hidden; /* Prevent button animations from overlapping outside the text box */
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 }
 
 .button-wrapper:last-child {
@@ -1564,7 +1548,6 @@ button:disabled {
     transform: scale(1.05);
 }
 
-<<<<<<< HEAD
 /* QR Code styles */
 .qr-header {
     display: flex;
@@ -1665,8 +1648,6 @@ button:disabled {
     background-color: #5a32a3;
 }
 
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 .social-share-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -1815,7 +1796,6 @@ button:disabled {
     .social-button.close-button {
         grid-column: 4 / 5;
     }
-<<<<<<< HEAD
     
     /* QR Code mobile styles */
     .back-button {
@@ -2090,6 +2070,4 @@ button:disabled {
   .navbar-link {
     margin-right: 0;
   }
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 }

@@ -23,10 +23,7 @@ namespace FiniteBlog.Repositories
         Task AddPostViewerAsync(PostViewer viewer);
 
         Task IncrementViewCountAsync(Guid postId);
-<<<<<<< HEAD
 
         Task<List<AnonymousPost>> GetRandomPostsAsync(int count);
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
     }
 } 

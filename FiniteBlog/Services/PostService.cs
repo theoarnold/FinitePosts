@@ -12,30 +12,20 @@ namespace FiniteBlog.Services
         private readonly ILogger<PostService> _logger;
         private readonly IHubContext<PostHub> _hubContext;
         private readonly IBlobStorageService _blobStorageService;
-<<<<<<< HEAD
         private readonly ConnectionManager _connectionManager;
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 
         public PostService(
             IPostRepository repository,
             ILogger<PostService> logger,
             IHubContext<PostHub> hubContext,
-<<<<<<< HEAD
             IBlobStorageService blobStorageService,
             ConnectionManager connectionManager)
-=======
-            IBlobStorageService blobStorageService)
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
         {
             _repository = repository;
             _logger = logger;
             _hubContext = hubContext;
             _blobStorageService = blobStorageService;
-<<<<<<< HEAD
             _connectionManager = connectionManager;
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
         }
 
         public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress)
@@ -46,7 +36,6 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-<<<<<<< HEAD
             await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
 
             // Refresh the post to get updated view count after processing
@@ -74,24 +63,6 @@ namespace FiniteBlog.Services
                 ActiveViewers = activeViewers
             };
 
-=======
-            PostDto postDto = new PostDto
-            {
-                Id = post.Id,
-                Content = post.Content,
-                Slug = post.Slug,
-                ViewLimit = post.ViewLimit,
-                CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt,
-                AttachedFileName = post.AttachedFileName,
-                AttachedFileUrl = post.AttachedFileUrl,
-                AttachedFileContentType = post.AttachedFileContentType,
-                AttachedFileSizeBytes = post.AttachedFileSizeBytes
-            };
-
-            await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
-
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
             return postDto;
         }
 
@@ -115,7 +86,6 @@ namespace FiniteBlog.Services
 
                     await _repository.AddPostViewerAsync(viewer);
                     await _repository.IncrementViewCountAsync(post.Id);
-<<<<<<< HEAD
                     await _repository.SaveChangesAsync();
 
                     // Refresh the post to get updated CurrentViews from database
@@ -131,17 +101,6 @@ namespace FiniteBlog.Services
                         
                         await BroadcastViewCountUpdateAsync(updatedPost);
                     }
-=======
-
-                    if (post != null && post.CurrentViews +1 >= post.ViewLimit)
-                    {
-                        _logger.LogInformation($"Post {slug} has reached view limit ({post.ViewLimit}). Deleting post.");
-                        await _repository.DeletePostAsync(post);
-                    }
-
-                    await _repository.SaveChangesAsync();
-                    await BroadcastViewCountUpdateAsync(post);
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
                 }
             }
             catch (Exception ex)
@@ -269,7 +228,6 @@ namespace FiniteBlog.Services
 
         public async Task BroadcastViewCountUpdateAsync(AnonymousPost post)
         {
-<<<<<<< HEAD
             int activeViewers = _connectionManager.GetActiveViewerCount(post.Slug);
             
             await _hubContext.Clients.Group(post.Slug).SendAsync("ReceiveViewUpdate", new 
@@ -315,13 +273,5 @@ namespace FiniteBlog.Services
                 
             return content.Substring(0, characterCount) + "...";
         }
-=======
-            await _hubContext.Clients.Group(post.Slug).SendAsync("ReceiveViewUpdate", new 
-            {
-                currentViews = post.CurrentViews,
-                viewLimit = post.ViewLimit
-            });
-        }
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
     }
 } 

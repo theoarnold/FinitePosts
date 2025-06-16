@@ -1,18 +1,11 @@
-<<<<<<< HEAD
 import React, { useState, useRef } from 'react';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
-=======
-import React, { useState } from 'react';
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 
 const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
   const [copied, setCopied] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-<<<<<<< HEAD
   const [currentView, setCurrentView] = useState('share'); // 'share' or 'qr'
   const qrCanvasRef = useRef(null);
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
   
   if (!isVisible && !isClosing) return null;
 
@@ -20,7 +13,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
-<<<<<<< HEAD
       setCurrentView('share'); // Reset to share view for next time
       onClose();
     }, 300); // Match the animation duration
@@ -35,11 +27,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
       link.click();
     }
   };
-=======
-      onClose();
-    }, 300); // Match the animation duration
-  };
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
   
   const fullUrl = `test.com/${postSlug}`;
   const title = "Check out this disappearing post on FiniteBlog!";
@@ -50,10 +37,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-<<<<<<< HEAD
-=======
-      console.error('Failed to copy URL:', err);
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = fullUrl;
@@ -101,12 +84,7 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
           } catch (err) {
             window.open(instagramWebLink, '_blank');
           }
-<<<<<<< HEAD
         }).catch(() => {
-=======
-        }, (err) => {
-          console.error('Could not copy text: ', err);
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
           // Still try to open Instagram even if copy failed
           try {
             window.location.href = 'instagram://story-camera';
@@ -127,7 +105,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     <div className={`popup-overlay ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
       <div className="popup-container" onClick={(e) => e.stopPropagation()}>
         <div className="popup-content">
-<<<<<<< HEAD
           {currentView === 'share' ? (
             // Share View
             <>
@@ -227,57 +204,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
               </div>
             </>
           )}
-=======
-          <p>Share this link to let others view your post:</p>
-          
-          <div className="url-container">
-            <div className="url-display">
-              {fullUrl}
-            </div>
-            <button 
-              onClick={handleCopy}
-              className={`copy-button ${copied ? 'copied' : ''}`}
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-
-          <div className="social-share-buttons">
-            <button 
-              onClick={() => handleSocialShare('twitter')}
-              className="social-button twitter"
-            >
-              Twitter
-            </button>
-            <button 
-              onClick={() => handleSocialShare('facebook')}
-              className="social-button facebook"
-            >
-              Facebook
-            </button>
-            <button 
-              onClick={() => handleSocialShare('linkedin')}
-              className="social-button linkedin"
-            >
-              LinkedIn
-            </button>
-            <button 
-              onClick={() => handleSocialShare('instagram')}
-              className="social-button instagram"
-            >
-              Instagram
-            </button>
-            <button 
-              onClick={() => handleSocialShare('email')}
-              className="social-button email"
-            >
-              Email
-            </button>
-            <button onClick={handleClose} className="social-button close-button">
-              Close
-            </button>
-          </div>
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
         </div>
       </div>
     </div>

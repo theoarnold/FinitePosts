@@ -7,15 +7,9 @@ namespace FiniteBlog.Hubs
     {
         private readonly ILogger<ConnectionManager> _logger;
         private readonly IHubContext<PostHub> _hubContext;
-<<<<<<< HEAD
         private readonly ConcurrentDictionary<string, string> _connections = new();
         private readonly ConcurrentDictionary<string, string> _connectionToVisitor = new();
         private readonly ConcurrentDictionary<string, HashSet<string>> _postViewers = new();
-=======
-        private readonly ConcurrentDictionary<string, string> _connections = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, string> _connectionToVisitor = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, HashSet<string>> _postViewers = new ConcurrentDictionary<string, HashSet<string>>();
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
 
         public ConnectionManager(ILogger<ConnectionManager> logger, IHubContext<PostHub> hubContext)
         {
@@ -25,12 +19,9 @@ namespace FiniteBlog.Hubs
 
         public void AddConnection(string connectionId, string slug, string visitorId)
         {
-<<<<<<< HEAD
             // Store the connection to slug mapping
             _connections.TryAdd(connectionId, slug);
             
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
             if (!string.IsNullOrEmpty(visitorId))
             {
                 // Store the connection to visitor mapping
@@ -53,7 +44,6 @@ namespace FiniteBlog.Hubs
             _ = _hubContext.Clients.Group(slug).SendAsync("ReceiveViewUpdate", new { activeViewers });
         }
 
-<<<<<<< HEAD
         public void AddFeedConnection(string connectionId, string slug)
         {
             // Store the connection to slug mapping for cleanup purposes
@@ -63,8 +53,6 @@ namespace FiniteBlog.Hubs
             _logger.LogInformation($"Added feed connection {connectionId} for post {slug}");
         }
 
-=======
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
         public async Task RemoveConnection(string connectionId)
         {
             if (_connections.TryRemove(connectionId, out string slug))

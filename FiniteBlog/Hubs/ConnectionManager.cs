@@ -7,9 +7,9 @@ namespace FiniteBlog.Hubs
     {
         private readonly ILogger<ConnectionManager> _logger;
         private readonly IHubContext<PostHub> _hubContext;
-        private readonly ConcurrentDictionary<string, string> _connections = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, string> _connectionToVisitor = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, HashSet<string>> _postViewers = new ConcurrentDictionary<string, HashSet<string>>();
+        private readonly ConcurrentDictionary<string, string> _connections = new();
+        private readonly ConcurrentDictionary<string, string> _connectionToVisitor = new();
+        private readonly ConcurrentDictionary<string, HashSet<string>> _postViewers = new();
 
         public ConnectionManager(ILogger<ConnectionManager> logger, IHubContext<PostHub> hubContext)
         {
@@ -19,6 +19,9 @@ namespace FiniteBlog.Hubs
 
         public void AddConnection(string connectionId, string slug, string visitorId)
         {
+            // Store the connection to slug mapping
+            _connections.TryAdd(connectionId, slug);
+            
             if (!string.IsNullOrEmpty(visitorId))
             {
                 // Store the connection to visitor mapping
@@ -39,6 +42,15 @@ namespace FiniteBlog.Hubs
             
             // Fire and forget - we don't want to await this
             _ = _hubContext.Clients.Group(slug).SendAsync("ReceiveViewUpdate", new { activeViewers });
+        }
+
+        public void AddFeedConnection(string connectionId, string slug)
+        {
+            // Store the connection to slug mapping for cleanup purposes
+            _connections.TryAdd(connectionId, slug);
+            
+            // Don't add to viewers or broadcast - feed connections are read-only
+            _logger.LogInformation($"Added feed connection {connectionId} for post {slug}");
         }
 
         public async Task RemoveConnection(string connectionId)

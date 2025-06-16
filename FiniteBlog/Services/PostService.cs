@@ -12,17 +12,20 @@ namespace FiniteBlog.Services
         private readonly ILogger<PostService> _logger;
         private readonly IHubContext<PostHub> _hubContext;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly ConnectionManager _connectionManager;
 
         public PostService(
             IPostRepository repository,
             ILogger<PostService> logger,
             IHubContext<PostHub> hubContext,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            ConnectionManager connectionManager)
         {
             _repository = repository;
             _logger = logger;
             _hubContext = hubContext;
             _blobStorageService = blobStorageService;
+            _connectionManager = connectionManager;
         }
 
         public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress)
@@ -33,21 +36,32 @@ namespace FiniteBlog.Services
                 return null;
             }
 
+            await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
+
+            // Refresh the post to get updated view count after processing
+            var updatedPost = await _repository.GetPostBySlugAsync(slug);
+            if (updatedPost == null)
+            {
+                return null; // Post was deleted after reaching view limit
+            }
+
+            // Get current active viewers count
+            int activeViewers = _connectionManager.GetActiveViewerCount(slug);
+
             PostDto postDto = new PostDto
             {
-                Id = post.Id,
-                Content = post.Content,
-                Slug = post.Slug,
-                ViewLimit = post.ViewLimit,
-                CurrentViews = post.CurrentViews,
-                CreatedAt = post.CreatedAt,
-                AttachedFileName = post.AttachedFileName,
-                AttachedFileUrl = post.AttachedFileUrl,
-                AttachedFileContentType = post.AttachedFileContentType,
-                AttachedFileSizeBytes = post.AttachedFileSizeBytes
+                Id = updatedPost.Id,
+                Content = updatedPost.Content,
+                Slug = updatedPost.Slug,
+                ViewLimit = updatedPost.ViewLimit,
+                CurrentViews = updatedPost.CurrentViews,
+                CreatedAt = updatedPost.CreatedAt,
+                AttachedFileName = updatedPost.AttachedFileName,
+                AttachedFileUrl = updatedPost.AttachedFileUrl,
+                AttachedFileContentType = updatedPost.AttachedFileContentType,
+                AttachedFileSizeBytes = updatedPost.AttachedFileSizeBytes,
+                ActiveViewers = activeViewers
             };
-
-            await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
 
             return postDto;
         }
@@ -72,15 +86,21 @@ namespace FiniteBlog.Services
 
                     await _repository.AddPostViewerAsync(viewer);
                     await _repository.IncrementViewCountAsync(post.Id);
-
-                    if (post != null && post.CurrentViews +1 >= post.ViewLimit)
-                    {
-                        _logger.LogInformation($"Post {slug} has reached view limit ({post.ViewLimit}). Deleting post.");
-                        await _repository.DeletePostAsync(post);
-                    }
-
                     await _repository.SaveChangesAsync();
-                    await BroadcastViewCountUpdateAsync(post);
+
+                    // Refresh the post to get updated CurrentViews from database
+                    var updatedPost = await _repository.GetPostBySlugAsync(slug);
+                    if (updatedPost != null)
+                    {
+                        if (updatedPost.CurrentViews >= updatedPost.ViewLimit)
+                        {
+                            _logger.LogInformation($"Post {slug} has reached view limit ({updatedPost.ViewLimit}). Deleting post.");
+                            await _repository.DeletePostAsync(updatedPost);
+                            await _repository.SaveChangesAsync();
+                        }
+                        
+                        await BroadcastViewCountUpdateAsync(updatedPost);
+                    }
                 }
             }
             catch (Exception ex)
@@ -208,11 +228,50 @@ namespace FiniteBlog.Services
 
         public async Task BroadcastViewCountUpdateAsync(AnonymousPost post)
         {
+            int activeViewers = _connectionManager.GetActiveViewerCount(post.Slug);
+            
             await _hubContext.Clients.Group(post.Slug).SendAsync("ReceiveViewUpdate", new 
             {
+                slug = post.Slug,
                 currentViews = post.CurrentViews,
-                viewLimit = post.ViewLimit
+                viewLimit = post.ViewLimit,
+                activeViewers = activeViewers
             });
+        }
+
+        public async Task<List<FeedPostDto>> GetRandomPostsForFeedAsync(int count)
+        {
+            _logger.LogInformation($"GetRandomPostsForFeedAsync called with count: {count}");
+            
+            var posts = await _repository.GetRandomPostsAsync(count);
+            
+            _logger.LogInformation($"Retrieved {posts.Count} posts from repository");
+            
+            var result = posts.Select(post => new FeedPostDto
+            {
+                Slug = post.Slug,
+                Preview = GetPreview(post.Content, 20),
+                CreatedAt = post.CreatedAt,
+                ViewLimit = post.ViewLimit,
+                CurrentViews = post.CurrentViews,
+                ActiveViewers = _connectionManager.GetActiveViewerCount(post.Slug),
+                HasAttachment = !string.IsNullOrEmpty(post.AttachedFileName)
+            }).ToList();
+            
+            _logger.LogInformation($"Returning {result.Count} feed posts");
+            
+            return result;
+        }
+
+        private static string GetPreview(string content, int characterCount)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return "";
+                
+            if (content.Length <= characterCount)
+                return content;
+                
+            return content.Substring(0, characterCount) + "...";
         }
     }
 } 

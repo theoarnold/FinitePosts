@@ -38,6 +38,18 @@ namespace FiniteBlog.Controllers
             return post;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<List<FeedPostDto>>> GetRandomPosts([FromQuery] int count = 20)
+        {
+            if (count <= 0 || count > 100)
+            {
+                return BadRequest("Count must be between 1 and 100.");
+            }
+
+            var posts = await _postService.GetRandomPostsForFeedAsync(count);
+            return Ok(posts);
+        }
+
         [HttpPost]
         [RequestSizeLimit(10 * 1024 * 1024)] // 10MB limit
         public async Task<ActionResult<object>> CreatePost()

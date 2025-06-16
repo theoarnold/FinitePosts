@@ -76,5 +76,16 @@ namespace FiniteBlog.Repositories
 
             return Task.CompletedTask;
         }
+
+        public async Task<List<AnonymousPost>> GetRandomPostsAsync(int count)
+        {
+            // Get all posts ordered by creation date (most recent first) and take the requested count
+            // This is much more efficient than the previous Guid.NewGuid() approach
+            // and more reliable than the complex random selection
+            return await _context.AnonymousPosts
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(count)
+                .ToListAsync();
+        }
     }
 } 

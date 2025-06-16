@@ -62,8 +62,7 @@ const ShareOptions = ({ slug }) => {
             setCopySuccess('Copied!');
             setTimeout(() => setCopySuccess(''), 2000);
           })
-          .catch(err => {
-            console.error('Could not copy text: ', err);
+          .catch(() => {
             setCopySuccess('Failed to copy');
           });
         break;

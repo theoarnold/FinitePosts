@@ -37,7 +37,6 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy URL:', err);
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = fullUrl;
@@ -85,8 +84,7 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
           } catch (err) {
             window.open(instagramWebLink, '_blank');
           }
-        }, (err) => {
-          console.error('Could not copy text: ', err);
+        }).catch(() => {
           // Still try to open Instagram even if copy failed
           try {
             window.location.href = 'instagram://story-camera';

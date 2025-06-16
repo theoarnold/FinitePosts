@@ -127,7 +127,7 @@ textarea {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   background: var(--glass-bg);
-  background-color: rgba(128, 128, 128, 0.1);
+  background-color: rgba(248, 240, 215, 0.75);
   backdrop-filter: blur(10px);
   color: var(--text-primary);
   outline: none;
@@ -483,12 +483,14 @@ button:disabled {
   }
   
   .view-counter {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
   }
   
   .view-counter div:first-child {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
+    margin-right: 0.5rem;
   }
   
   .view-limit-controls {
@@ -1813,4 +1815,259 @@ button:disabled {
         padding: 0.6rem 1.2rem;
         font-size: 0.9rem;
     }
+}
+
+/* PostFeed styles */
+.feed-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.1rem 0.5rem 0 0.5rem;
+  height: calc(100vh - 52px - 0.1rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.1rem;
+  padding: 0 1rem;
+}
+
+.write-post-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  height: 40px;
+  min-width: 120px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.write-post-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Override container padding for feed page */
+.container:has(.feed-container) {
+  padding-bottom: 0;
+}
+
+/* Home link on ViewPost page */
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 0.3rem 0;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  margin-top: 0;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  width: 80px;
+}
+
+.home-link:hover {
+  background-color: var(--primary-hover);
+  color: white;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.post-feed {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--card-bg);
+  border-radius: 12px 12px 0 0;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  padding: 0.1rem 1rem 1rem 1rem;
+  position: relative;
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.post-feed::-webkit-scrollbar {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  display: none;
+}
+
+.feed-post {
+  background-color: rgba(248, 240, 215, 0.75);
+  border: 1px solid rgba(221, 221, 221, 0.5);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.feed-post:hover {
+  background-color: rgba(250, 245, 225, 0.9);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feed-post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.post-time {
+  font-weight: 600;
+}
+
+.post-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.attachment-indicator {
+  font-size: 0.75rem;
+}
+
+.feed-post-preview {
+  color: var(--text-color);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.feed-post-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.click-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4.6px; /* 15% thicker: 4px * 1.15 = 4.6px */
+  background-color: rgba(221, 221, 221, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4CAF50 0%, #FF9800 50%, #f44336 100%);
+  transition: clip-path 0.3s ease;
+  border-radius: 2px;
+}
+
+.no-posts {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.no-posts p {
+  margin-bottom: 0.5rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.retry-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.retry-button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Navbar updates for multiple links */
+.navbar-links {
+  margin-left: auto;
+  display: flex;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .feed-container {
+    margin: 0 auto;
+    padding: 0.1rem 0 0 0;
+    height: calc(100vh - 52px - 0.1rem);
+  }
+  
+  .feed-header {
+    padding: 0 0.75rem;
+    margin-bottom: 0.1rem;
+  }
+  
+  .write-post-button {
+    font-size: 0.85rem;
+    min-width: 110px;
+    height: 36px;
+  }
+  
+  .post-feed {
+    padding: 0.1rem 0.75rem 0.75rem 0.75rem;
+  }
+  
+  .feed-post {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .feed-post-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  
+  .navbar-links {
+    gap: 1rem;
+    margin-right: 2rem;
+  }
+  
+  .navbar-link {
+    margin-right: 0;
+  }
 }

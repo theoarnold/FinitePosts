@@ -28,13 +28,25 @@ namespace FiniteBlog.Hubs
             _logger.LogInformation($"Client {connectionId} successfully joined group for post {slug}");
         }
 
+        public async Task JoinPostGroupForFeed(string slug)
+        {
+            string connectionId = Context.ConnectionId;
+            
+            await Groups.AddToGroupAsync(connectionId, slug);
+            
+            // For feed connections, only join the group but don't add as viewer
+            _connectionManager.AddFeedConnection(connectionId, slug);
+            
+            _logger.LogInformation($"Client {connectionId} successfully joined group for post {slug} (feed only)");
+        }
+
         public async Task RequestViewerCount(string slug)
         {
             // Get current viewer count
             int activeViewers = _connectionManager.GetActiveViewerCount(slug);
             
             // Only send to the requesting client, not the whole group
-            await Clients.Caller.SendAsync("ReceiveViewUpdate", new { activeViewers });
+            await Clients.Caller.SendAsync("ReceiveViewerCount", new { activeViewers });
             
             _logger.LogInformation($"Sent viewer count to client {Context.ConnectionId} for {slug}: {activeViewers}");
         }

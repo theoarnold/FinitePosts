@@ -7,6 +7,7 @@ namespace FiniteBlog.DTOs
         public string Slug { get; set; } = string.Empty;
         public int ViewLimit { get; set; }
         public int CurrentViews { get; set; }
+        public int ActiveViewers { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         
         // File attachment properties

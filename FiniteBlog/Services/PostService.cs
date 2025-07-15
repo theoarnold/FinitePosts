@@ -28,7 +28,7 @@ namespace FiniteBlog.Services
             _connectionManager = connectionManager;
         }
 
-        public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress)
+        public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
         {
             AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
             if (post == null)
@@ -36,9 +36,8 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-            await ProcessViewCountAsync(post, slug, visitorId, ipAddress);
+            await ProcessViewCountAsync(post, slug, visitorId, deviceFingerprint, ipAddress);
 
-            // Refresh the post to get updated view count after processing
             var updatedPost = await _repository.GetPostBySlugAsync(slug);
             if (updatedPost == null)
             {
@@ -47,6 +46,18 @@ namespace FiniteBlog.Services
 
             // Get current active viewers count
             int activeViewers = _connectionManager.GetActiveViewerCount(slug);
+
+            // Get drawings for this post
+            List<PostDrawing> drawings = await _repository.GetDrawingsForPostAsync(updatedPost.Id);
+            List<PostDrawingDto> drawingDtos = drawings.Select(d => new PostDrawingDto
+            {
+                Id = d.Id,
+                Text = d.Text,
+                PositionX = d.PositionX,
+                PositionY = d.PositionY,
+                CreatedByFingerprint = d.CreatedByFingerprint,
+                CreatedAt = d.CreatedAt
+            }).ToList();
 
             PostDto postDto = new PostDto
             {
@@ -60,47 +71,75 @@ namespace FiniteBlog.Services
                 AttachedFileUrl = updatedPost.AttachedFileUrl,
                 AttachedFileContentType = updatedPost.AttachedFileContentType,
                 AttachedFileSizeBytes = updatedPost.AttachedFileSizeBytes,
-                ActiveViewers = activeViewers
+                ActiveViewers = activeViewers,
+                Drawings = drawingDtos
             };
 
             return postDto;
         }
 
-        private async Task ProcessViewCountAsync(AnonymousPost post, string slug, string? visitorId, string? ipAddress)
+        private async Task ProcessViewCountAsync(AnonymousPost post, string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
         {
             try
             {
+                _logger.LogInformation($"Processing view count for post {slug}. VisitorId: {visitorId}, DeviceFingerprint: {deviceFingerprint}, IpAddress: {ipAddress}");
+                
+                string compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
+                
                 bool hasViewedByCookie = !string.IsNullOrEmpty(visitorId) && await _repository.HasVisitorViewedPostAsync(post.Id, visitorId);
-                bool hasViewedByIp = !string.IsNullOrEmpty(ipAddress) && await _repository.HasIpViewedPostAsync(post.Id, ipAddress);
+                bool hasViewedByComposite = !string.IsNullOrEmpty(compositeFingerprint) && await _repository.HasFingerprintViewedPostAsync(post.Id, compositeFingerprint);
 
-                if (!(hasViewedByCookie || hasViewedByIp))
+                _logger.LogInformation($"Post {slug} - HasViewedByCookie: {hasViewedByCookie}, HasViewedByComposite: {hasViewedByComposite} (Composite: {compositeFingerprint})");
+
+                if (!(hasViewedByCookie || hasViewedByComposite))
                 {
+                    _logger.LogInformation($"Recording new view for post {slug} - no previous views detected by any identification method");
+                    
                     PostViewer viewer = new PostViewer
                     {
                         Id = Guid.NewGuid(),
                         PostId = post.Id,
                         VisitorId = visitorId ?? string.Empty,
-                        IpAddress = ipAddress ?? string.Empty,
+                        BrowserFingerprint = compositeFingerprint,
                         ViewedAt = DateTime.Now
                     };
-
                     await _repository.AddPostViewerAsync(viewer);
+
                     await _repository.IncrementViewCountAsync(post.Id);
                     await _repository.SaveChangesAsync();
 
-                    // Refresh the post to get updated CurrentViews from database
-                    var updatedPost = await _repository.GetPostBySlugAsync(slug);
+                    AnonymousPost? updatedPost = await _repository.GetPostBySlugAsync(slug);
                     if (updatedPost != null)
                     {
+                        _logger.LogInformation($"Post {slug} view count updated to {updatedPost.CurrentViews}/{updatedPost.ViewLimit}");
+                        
                         if (updatedPost.CurrentViews >= updatedPost.ViewLimit)
                         {
                             _logger.LogInformation($"Post {slug} has reached view limit ({updatedPost.ViewLimit}). Deleting post.");
+                            
+                            if (!string.IsNullOrEmpty(updatedPost.AttachedFileName))
+                            {
+                                try
+                                {
+                                    bool fileDeleted = await _blobStorageService.DeleteFileAsync(updatedPost.AttachedFileName);
+                                    _logger.LogInformation($"File cleanup for post {slug}: {(fileDeleted ? "success" : "file not found")} - {updatedPost.AttachedFileName}");
+                                }
+                                catch (Exception fileEx)
+                                {
+                                    _logger.LogWarning(fileEx, $"Failed to delete attached file for post {slug}: {updatedPost.AttachedFileName}");
+                                }
+                            }
+                            
                             await _repository.DeletePostAsync(updatedPost);
                             await _repository.SaveChangesAsync();
                         }
                         
                         await BroadcastViewCountUpdateAsync(updatedPost);
                     }
+                }
+                else
+                {
+                    _logger.LogInformation($"Skipping view count for post {slug} - already viewed by this visitor (Cookie: {hasViewedByCookie}, Composite: {hasViewedByComposite})");
                 }
             }
             catch (Exception ex)
@@ -109,15 +148,31 @@ namespace FiniteBlog.Services
             }
         }
 
+        private string CreateCompositeFingerprint(string? deviceFingerprint, string? ipAddress)
+        {
+            List<string> components = [];
+            
+            if (!string.IsNullOrEmpty(deviceFingerprint))
+                components.Add(deviceFingerprint);
+                
+            if (!string.IsNullOrEmpty(ipAddress))
+                components.Add(ipAddress);
+            
+            if (components.Count == 0)
+                return string.Empty;
+                
+            return string.Join("|", components);
+        }
+
         public async Task<(PostDto Post, string? ErrorMessage)> CreatePostAsync(CreatePostDto createDto)
         {
             _logger.LogInformation($"Creating post with view limit: {createDto.ViewLimit}, Content length: {createDto.Content?.Length ?? 0}, Has file: {createDto.File != null}");
             
-            // Validate that either content or file is provided
-            if (string.IsNullOrWhiteSpace(createDto.Content) && createDto.File == null)
+            // Validate that content is provided
+            if (string.IsNullOrWhiteSpace(createDto.Content))
             {
-                _logger.LogWarning("Post creation failed: No content or file provided. Content: '{Content}', File: {HasFile}", createDto.Content, createDto.File != null);
-                return (new PostDto(), "Either content or a file must be provided.");
+                _logger.LogWarning("Post creation failed: No content provided. Content: '{Content}'", createDto.Content);
+                return (new PostDto(), "Text content is required for all posts.");
             }
 
             if (createDto.ViewLimit <= 0)
@@ -125,19 +180,22 @@ namespace FiniteBlog.Services
                 return (new PostDto(), "View limit must be greater than 0.");
             }
 
-            if (createDto.ViewLimit > 10000)
+            if (createDto.ViewLimit > 9999)
             {
-                return (new PostDto(), "View limit cannot exceed 10000.");
+                return (new PostDto(), "View limit cannot exceed 9999.");
             }
 
             // Handle file upload if present
             BlobUploadResult? fileUploadResult = null;
             if (createDto.File != null)
             {
-                fileUploadResult = await _blobStorageService.UploadFileAsync(createDto.File);
-                if (!fileUploadResult.Success)
+                try
                 {
-                    return (new PostDto(), fileUploadResult.ErrorMessage ?? "File upload failed.");
+                    fileUploadResult = await _blobStorageService.UploadFileAsync(createDto.File);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return (new PostDto(), ex.Message);
                 }
             }
 
@@ -188,8 +246,7 @@ namespace FiniteBlog.Services
             }
             catch (Exception ex)
             {
-                // If post creation fails and we uploaded a file, clean it up
-                if (fileUploadResult?.Success == true && !string.IsNullOrEmpty(fileUploadResult.FileName))
+                if (fileUploadResult != null && !string.IsNullOrEmpty(fileUploadResult.FileName))
                 {
                     try
                     {
@@ -235,27 +292,28 @@ namespace FiniteBlog.Services
                 slug = post.Slug,
                 currentViews = post.CurrentViews,
                 viewLimit = post.ViewLimit,
-                activeViewers = activeViewers
             });
         }
 
-        public async Task<List<FeedPostDto>> GetRandomPostsForFeedAsync(int count)
+        public async Task<List<FeedPostDto>> GetRandomPostsAsync(int count)
         {
-            _logger.LogInformation($"GetRandomPostsForFeedAsync called with count: {count}");
+            _logger.LogInformation($"GetRandomPostsAsync called with count: {count}");
             
-            var posts = await _repository.GetRandomPostsAsync(count);
+            List<AnonymousPost> posts = await _repository.GetRandomPostsAsync(count);
             
             _logger.LogInformation($"Retrieved {posts.Count} posts from repository");
-            
-            var result = posts.Select(post => new FeedPostDto
+
+            List<FeedPostDto> result = posts.Select(post => new FeedPostDto
             {
                 Slug = post.Slug,
-                Preview = GetPreview(post.Content, 20),
+                Preview = GetPreview(post.Content, 250),
                 CreatedAt = post.CreatedAt,
                 ViewLimit = post.ViewLimit,
                 CurrentViews = post.CurrentViews,
                 ActiveViewers = _connectionManager.GetActiveViewerCount(post.Slug),
-                HasAttachment = !string.IsNullOrEmpty(post.AttachedFileName)
+                HasAttachment = !string.IsNullOrEmpty(post.AttachedFileName),
+                AttachedFileUrl = post.AttachedFileUrl,
+                AttachedFileContentType = post.AttachedFileContentType
             }).ToList();
             
             _logger.LogInformation($"Returning {result.Count} feed posts");
@@ -265,13 +323,41 @@ namespace FiniteBlog.Services
 
         private static string GetPreview(string content, int characterCount)
         {
-            if (string.IsNullOrWhiteSpace(content))
-                return "";
+            // Find first newline
+            int newlineIndex = content.IndexOfAny(new[] { '\r', '\n' });
+            
+            // Use newline position if it comes before character limit, otherwise use character limit
+            int cutoff = newlineIndex >= 0 && newlineIndex < characterCount ? newlineIndex : characterCount;
+            
+            if (content.Length <= cutoff)
+                return content.Trim();
                 
-            if (content.Length <= characterCount)
-                return content;
-                
-            return content.Substring(0, characterCount) + "...";
+            return content.Substring(0, cutoff).Trim() + "...";
+        }
+
+        public async Task AddDrawingToPostAsync(string slug, string text, double positionX, double positionY, string deviceFingerprint)
+        {
+            var post = await _repository.GetPostBySlugAsync(slug);
+            if (post == null)
+            {
+                return;
+            }
+
+            await _repository.RemoveDrawingsByFingerprintAsync(post.Id, deviceFingerprint);
+
+            PostDrawing drawing = new()
+            {
+                Id = Guid.NewGuid(),
+                PostId = post.Id,
+                Text = text,
+                PositionX = positionX,
+                PositionY = positionY,
+                CreatedByFingerprint = deviceFingerprint,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _repository.AddDrawingToPostAsync(drawing);
+            await _repository.SaveChangesAsync();
         }
     }
 } 

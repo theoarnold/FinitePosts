@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
 
 /* Color variables */
 :root {
@@ -22,14 +22,20 @@
   color: white;
 }
 
-body {
+html, body {
+  height: 100%;
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: 'Space Mono', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-color);
   padding-top: 52px; /* Adjusted padding for the thinner navbar */
   color: var(--text-color);
+  box-sizing: border-box;
 }
 
 /* Navbar styles */
@@ -51,6 +57,8 @@ body {
   color: white;
   text-decoration: none;
   font-weight: bold;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
 }
 
 .navbar-link {
@@ -59,6 +67,7 @@ body {
   font-size: 14px;
   margin-left: auto;
   margin-right: 40px;
+  font-weight: bold;
 }
 
 code {
@@ -69,7 +78,8 @@ code {
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 1rem 1rem;
+  box-sizing: border-box;
 }
 
 .card {
@@ -139,7 +149,7 @@ textarea {
   margin-bottom: 0.1rem;
   position: relative;
   transition: var(--transition-smooth);
-  font-family: inherit;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
 
 textarea::placeholder {
@@ -250,6 +260,8 @@ button:disabled {
   position: relative;
   width: 100%;
   box-sizing: border-box;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .stats-marquee-content {
@@ -268,8 +280,7 @@ button:disabled {
 }
 
 .stats-marquee-content span {
-  font-style: italic;
-  font-weight: normal;
+  font-weight: bold;
 }
 
 .stats-divider {
@@ -309,6 +320,172 @@ button:disabled {
 .share-button:hover {
   background-color: var(--primary-hover);
   box-shadow: none;
+}
+
+/* Drawing functionality styles */
+.draw-container {
+  display: inline-block;
+  margin-left: 8px;
+  position: relative;
+  z-index: 20;
+}
+
+.draw-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #a8263a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 20;
+  height: 40px;
+  min-width: 80px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.draw-button:hover {
+  background-color: #8f1e2f;
+}
+
+.draw-button.drawing-mode {
+  background-color: #1e7a3a;
+}
+
+.draw-button.drawing-mode:hover {
+  background-color: #186631;
+}
+
+.draw-button.disabled {
+  background-color: #4a5560;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.text-annotation-canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50000;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.annotation-canvas {
+  pointer-events: auto;
+}
+
+.received-annotations-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.annotation-fade-in {
+  animation: fadeInAnnotations 1s ease-in-out forwards;
+}
+
+@keyframes fadeInAnnotations {
+  from { 
+    opacity: 0;
+  }
+  to { 
+    opacity: 1;
+  }
+}
+
+.post-content-with-annotations {
+  position: relative;
+  z-index: 5;
+}
+
+.post-content-annotation-mode {
+  pointer-events: none;
+  user-select: none;
+}
+
+.annotation-instructions {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  z-index: 20;
+  pointer-events: none;
+  border: 1px solid #ff0000;
+}
+
+.text-input-overlay {
+  position: absolute;
+  z-index: 99999 !important;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+.text-input-overlay input {
+  font-family: inherit;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 16px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure UI elements appear above annotations */
+.home-link,
+.share-button,
+.draw-button,
+.post-footer,
+.view-counter,
+.personal-viewer-counter {
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {  
+  .draw-container {
+    margin-left: 6px;
+  }
+  
+  .drawing-instructions {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    top: 10px;
+  }
 }
 
 .share-dropdown {
@@ -713,7 +890,7 @@ button:disabled {
   align-items: center;
   height: 36px;
   pointer-events: auto; /* Make buttons clickable */
-  overflow: hidden; /* Prevent button animations from overlapping outside the text box */
+  overflow: visible; /* Allow button hover effects to be visible */
 }
 
 .button-wrapper:last-child {
@@ -851,16 +1028,19 @@ button:disabled {
 
 .file-upload-button.shrink:hover {
   background-color: var(--primary-hover);
+  border-radius: 8px;
 }
 
 .file-upload-button:hover {
   background-color: var(--primary-hover);
   transform: scale(1.05);
   box-shadow: none;
+  border-radius: 8px;
 }
 
 .file-upload-button.large:hover {
   transform: scale(1.02);
+  border-radius: 10px;
 }
 
 .file-upload-button.large .upload-text {
@@ -898,7 +1078,46 @@ button:disabled {
 /* Mobile styles for file upload */
 @media (max-width: 768px) {
   .file-name {
-    max-width: 150px;
+    max-width: 100px;
+    font-size: 12px;
+  }
+}
+
+/* Mobile file upload button text with scrolling filename */
+@media (max-width: 768px) {
+  .file-upload-button .upload-text {
+    max-width: 130px;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline-block;
+    position: relative;
+  }
+  
+  .scrolling-filename {
+    display: inline-block;
+    animation: scroll-text 12s linear infinite;
+    white-space: nowrap;
+    min-width: max-content;
+  }
+
+ 
+  
+  @keyframes scroll-text {
+    0% { transform: translateX(calc(130px)); }
+    100% { transform: translateX(calc(-100% - 30px)); }
+  }
+}
+
+@media (max-width: 480px) {
+  .file-upload-button .upload-text {
+    max-width: 110px;
+  }
+
+ 
+  
+  @keyframes scroll-text {
+    0% { transform: translateX(calc(110px)); }
+    100% { transform: translateX(calc(-100% - 25px)); }
   }
 }
 
@@ -912,6 +1131,9 @@ button:disabled {
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
   z-index: 100;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   animation: fadeIn 0.3s ease-in;
@@ -1333,12 +1555,15 @@ button:disabled {
     display: flex;
     flex-direction: column;
     min-height: 300px;
+    position: relative;
 }
 
 /* Stats counter at the top */
 .personal-viewer-counter {
     margin-bottom: 1.5rem;
     margin-top: -0.75rem;
+    position: relative;
+    z-index: 10;
     margin-left: -0.75rem;
     margin-right: -0.75rem;
     padding: 0.75rem 1.5rem;
@@ -1365,14 +1590,103 @@ button:disabled {
     margin: 0 2rem;
 }
 
-/* Post content area */
+/* Post content area - text should appear above annotations */
 .post-content {
-    white-space: pre-wrap;
-    margin-bottom: 1rem;
-    flex-grow: 1;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    max-width: 100%;
+  white-space: pre-wrap;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  font-weight: 400;
+  position: relative;
+  z-index: 10;
+  text-shadow: 2px 2px 4px rgba(255, 249, 230, 1), 1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 3px rgba(255, 249, 230, 1), 0px 0px 6px rgba(255, 249, 230, 1), 3px 3px 6px rgba(255, 249, 230, 1), -1px -1px 2px rgba(255, 249, 230, 1), -2px -2px 4px rgba(255, 249, 230, 1), 1px -1px 2px rgba(255, 249, 230, 1), -1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 8px rgba(255, 249, 230, 1);
+}
+
+.post-content::selection {
+  text-shadow: none;
+  background-color: #333333;
+  color: white;
+}
+
+.post-content::-moz-selection {
+  text-shadow: none;
+  background-color: #333333;
+  color: white;
+}
+
+.post-content-large {
+  font-size: 2em !important;
+  line-height: 1.4 !important;
+}
+
+.post-content-with-annotations {
+  position: relative;
+  z-index: 5;
+}
+
+/* Post body for ReactMarkdown content */
+.post-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 400;
+}
+
+/* Markdown content styling */
+.post-content h1, .post-content h2, .post-content h3, 
+.post-body h1, .post-body h2, .post-body h3 {
+    font-family: 'Space Mono', monospace;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.post-content h1, .post-body h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.post-content h2, .post-body h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.post-content h3, .post-body h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Code blocks and inline code keep monospace */
+.post-content code, .post-content pre,
+.post-body code, .post-body pre {
+    font-family: 'Space Mono', monospace;
+}
+
+/* Strong and emphasis styling */
+.post-content strong, .post-body strong {
+    font-weight: 600;
+}
+
+.post-content em, .post-body em {
+    font-style: italic;
+    font-weight: 500;
+}
+
+/* Images should appear behind drawings */
+.post-content img,
+.attached-file img {
+    position: relative;
+    z-index: 1;
+}
+
+/* Audio elements should also be behind drawings */
+.attached-file audio {
+    position: relative;
+    z-index: 1;
 }
 
 /* Share functionality */
@@ -1545,7 +1859,6 @@ button:disabled {
 
 .copy-button.copied {
     background-color: #28a745;
-    transform: scale(1.05);
 }
 
 /* QR Code styles */
@@ -1821,7 +2134,7 @@ button:disabled {
 .feed-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0.1rem 0.5rem 0 0.5rem;
+  padding: 0.1rem 0.25rem 0 0.25rem;
   height: calc(100vh - 52px - 0.1rem);
   display: flex;
   flex-direction: column;
@@ -1831,7 +2144,7 @@ button:disabled {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 0.1rem;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
 .write-post-button {
@@ -1859,9 +2172,11 @@ button:disabled {
   transform: translateY(-1px);
 }
 
-/* Override container padding for feed page */
+/* Override container constraints for feed page */
 .container:has(.feed-container) {
-  padding-bottom: 0;
+  padding: 0;
+  height: calc(100vh - 52px);
+  overflow: hidden;
 }
 
 /* Home link on ViewPost page */
@@ -1882,6 +2197,8 @@ button:disabled {
   border: none;
   cursor: pointer;
   width: 80px;
+  position: relative;
+  z-index: 10;
 }
 
 .home-link:hover {
@@ -1898,7 +2215,7 @@ button:disabled {
   border-radius: 12px 12px 0 0;
   border: 1px solid var(--border-color);
   border-bottom: none;
-  padding: 0.1rem 1rem 1rem 1rem;
+  padding: 0.1rem 0.5rem 1rem 0.5rem;
   position: relative;
   
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -1923,10 +2240,7 @@ button:disabled {
 }
 
 .feed-post:hover {
-  background-color: rgba(250, 245, 225, 0.9);
   border-color: var(--primary-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .feed-post-header {
@@ -1953,10 +2267,15 @@ button:disabled {
 }
 
 .feed-post-preview {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   color: var(--text-color);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 1.5rem;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .feed-post-footer {
@@ -2029,14 +2348,24 @@ button:disabled {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 0.5rem 0.5rem;
+  }
+  
+  .container:has(.feed-container) {
+    padding: 0;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+  }
+  
   .feed-container {
     margin: 0 auto;
-    padding: 0.1rem 0 0 0;
+    padding: 0.1rem 0.125rem 0 0.125rem;
     height: calc(100vh - 52px - 0.1rem);
   }
   
   .feed-header {
-    padding: 0 0.75rem;
+    padding: 0 0.375rem;
     margin-bottom: 0.1rem;
   }
   
@@ -2047,7 +2376,7 @@ button:disabled {
   }
   
   .post-feed {
-    padding: 0.1rem 0.75rem 0.75rem 0.75rem;
+    padding: 0.1rem 0.375rem 0.75rem 0.375rem;
   }
   
   .feed-post {
@@ -2070,4 +2399,37 @@ button:disabled {
   .navbar-link {
     margin-right: 0;
   }
+}
+
+/* Feed post image blur overlay styles */
+.feed-post-with-image {
+  position: relative;
+  color: white;
+}
+
+.feed-post-blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.inverted-text {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.feed-post-with-image .feed-post-header,
+.feed-post-with-image .feed-post-preview,
+.feed-post-with-image .feed-post-footer {
+  position: relative;
+  z-index: 2;
 }

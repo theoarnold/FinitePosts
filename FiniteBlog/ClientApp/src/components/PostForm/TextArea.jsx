@@ -11,9 +11,9 @@ const PostTextArea = memo(({
   const [isTyping, setIsTyping] = useState(content.length > 0);
   const [fileAttached, setFileAttached] = useState(false);
   const [fileName, setFileName] = useState('');
-  const [showTooltip, setShowTooltip] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [lastCursorPosition, setLastCursorPosition] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const scrollTimeoutRef = useRef(null);
   
   const textareaRef = useRef(null);
@@ -78,6 +78,16 @@ const PostTextArea = memo(({
         clearTimeout(scrollTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleContentChange = useCallback((e) => {
@@ -158,7 +168,7 @@ const PostTextArea = memo(({
       <div className="textarea-container">
         <textarea
           ref={textareaRef}
-          placeholder={`Share text or a file with up to ${viewLimit} people...`}
+          placeholder={`Share text with up to ${viewLimit} people...`}
           value={content}
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
@@ -176,17 +186,17 @@ const PostTextArea = memo(({
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
+              accept="image/jpeg,image/png,image/gif,image/webp,audio/mpeg,audio/wav,audio/ogg,audio/mp4"
               style={{ display: 'none' }}
             />
             <button
               ref={buttonRef}
               type="button"
               onClick={triggerFileInput}
-              className={`file-upload-button ${isTyping ? 'shrink' : 'large'}`}
-              title="Upload a file (can be posted without text)"
-              onMouseEnter={() => setShowTooltip(true)}
+              className={`file-upload-button ${isTyping || (isMobile && fileAttached) ? 'shrink' : 'large'}`}
+              title="Upload a file (text is required)"
+              onMouseEnter={() => {}}
               onMouseLeave={() => {
-                setShowTooltip(false);
                 handleMouseLeave();
               }}
               onMouseMove={handleMouseMove}
@@ -199,18 +209,15 @@ const PostTextArea = memo(({
                     : 'translate(22px, 8px)'
                 }}
               >
-                IMAGE/AUDIO
+                {isMobile && fileAttached ? (
+                  <span className="scrolling-filename">{fileName}</span>
+                ) : 'IMAGE/AUDIO'}
               </span>
             </button>
-            {fileAttached && <span className="file-name">{fileName}</span>}
-            {showTooltip && !fileAttached && (
-              <div className="file-tooltip">
-                Upload a file - text is optional!
-              </div>
-            )}
+            {fileAttached && !isMobile && <span className="file-name">{fileName}</span>}
           </div>
 
-          {(content.trim().length > 0 || fileAttached) && (
+          {content.trim().length > 0 && (
             <div className="button-wrapper">
               {isTyping && (
                 <div className="word-counter">

@@ -4,13 +4,17 @@
   "private": true,
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
+    "@thumbmarkjs/thumbmarkjs": "^0.20.5",
     "axios": "^1.5.0",
     "http-proxy-middleware": "^3.0.3",
     "qrcode.react": "^4.2.0",
+    "randomcolor": "^0.6.2",
     "react": "^18.2.0",
+    "react-audio-visualize": "^1.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
     "react-scripts": "5.0.1",
+    "react-signature-canvas": "^1.1.0-alpha.2",
     "react-timeago": "^8.2.0"
   },
   "scripts": {

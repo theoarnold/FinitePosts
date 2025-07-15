@@ -1,57 +1,61 @@
 import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 
+// Configuration for different view ranges
+const VIEW_RANGES = {
+  locked: [
+    { min: 1, max: 100, sliderStart: 0, sliderEnd: 50, type: 'linear' },
+    { min: 100, max: 1000, sliderStart: 50, sliderEnd: 100, type: 'exponential' }
+  ],
+  unlocked: [
+    { min: 1, max: 100, sliderStart: 0, sliderEnd: 40, type: 'linear' },
+    { min: 100, max: 1000, sliderStart: 40, sliderEnd: 70, type: 'exponential' },
+    { min: 1000, max: 9999, sliderStart: 70, sliderEnd: 100, type: 'exponential' }
+  ]
+};
+
 // Function to convert slider value (0-100) to view limit using a custom scale
 const calculateViewLimit = (sliderValue, highRangeUnlocked) => {
-  if (!highRangeUnlocked) {
-    // With high range locked: 0-50 → 1-100, 50-100 → 100-1000
-    if (sliderValue <= 50) {
-      return Math.round(1 + ((sliderValue / 50) * 99));
-    } else {
-      const normalizedValue = (sliderValue - 50) / 50;
-      const rawValue = 100 * Math.exp(Math.log(10) * normalizedValue);
-      return Math.round(rawValue / 10) * 10;
-    }
-  } else {
-    // With high range unlocked: 0-40 → 1-100, 40-70 → 100-1000, 70-100 → 1000-10000
-    if (sliderValue <= 40) {
-      return Math.round(1 + ((sliderValue / 40) * 99));
-    } else if (sliderValue <= 70) {
-      const normalizedValue = (sliderValue - 40) / 30;
-      const rawValue = 100 * Math.exp(Math.log(10) * normalizedValue);
-      return Math.round(rawValue / 10) * 10;
-    } else {
-      const normalizedValue = (sliderValue - 70) / 30;
-      const rawValue = 1000 * Math.exp(Math.log(10) * normalizedValue);
-      return Math.round(rawValue / 100) * 100;
+  const ranges = VIEW_RANGES[highRangeUnlocked ? 'unlocked' : 'locked'];
+  
+  for (const range of ranges) {
+    if (sliderValue >= range.sliderStart && sliderValue <= range.sliderEnd) {
+      const progress = (sliderValue - range.sliderStart) / (range.sliderEnd - range.sliderStart);
+      
+      if (range.type === 'linear') {
+        return Math.round(range.min + (progress * (range.max - range.min)));
+      } else {
+        // Exponential scaling for larger ranges
+        const exponentialValue = range.min * Math.pow(range.max / range.min, progress);
+        return range.min >= 1000 
+          ? Math.min(range.max, Math.round(exponentialValue / 100) * 100) // Round to nearest 100 for 1000+ range
+          : Math.round(exponentialValue / 10) * 10; // Round to nearest 10 for 100-1000 range
+      }
     }
   }
+  
+  // Fallback (shouldn't happen)
+  return 1;
 };
 
 // Function to convert view limit to slider position
 const calculateSliderValue = (viewLimit, highRangeUnlocked) => {
-  if (!highRangeUnlocked) {
-    // With high range locked
-    if (viewLimit <= 100) {
-      return Math.round(((viewLimit - 1) / 99) * 50);
-    } else {
-      const roundedValue = Math.round(viewLimit / 10) * 10;
-      const normalizedValue = Math.log(roundedValue / 100) / Math.log(10);
-      return Math.round(50 + (normalizedValue * 50));
-    }
-  } else {
-    // With high range unlocked
-    if (viewLimit <= 100) {
-      return Math.round(((viewLimit - 1) / 99) * 40);
-    } else if (viewLimit <= 1000) {
-      const roundedValue = Math.round(viewLimit / 10) * 10;
-      const normalizedValue = Math.log(roundedValue / 100) / Math.log(10);
-      return Math.round(40 + (normalizedValue * 30));
-    } else {
-      const roundedValue = Math.round(viewLimit / 100) * 100;
-      const normalizedValue = Math.log(roundedValue / 1000) / Math.log(10);
-      return Math.round(70 + (normalizedValue * 30));
+  const ranges = VIEW_RANGES[highRangeUnlocked ? 'unlocked' : 'locked'];
+  
+  for (const range of ranges) {
+    if (viewLimit >= range.min && viewLimit <= range.max) {
+      if (range.type === 'linear') {
+        const progress = (viewLimit - range.min) / (range.max - range.min);
+        return Math.round(range.sliderStart + (progress * (range.sliderEnd - range.sliderStart)));
+      } else {
+        // Inverse exponential scaling
+        const progress = Math.log(viewLimit / range.min) / Math.log(range.max / range.min);
+        return Math.round(range.sliderStart + (progress * (range.sliderEnd - range.sliderStart)));
+      }
     }
   }
+  
+  // Fallback (shouldn't happen)
+  return 0;
 };
 
 const ViewLimitSlider = memo(({ viewLimit, onViewLimitChange }) => {

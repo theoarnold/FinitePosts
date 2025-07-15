@@ -12,6 +12,7 @@ namespace FiniteBlog.Data
 
         public DbSet<AnonymousPost> AnonymousPosts { get; set; } = null!;
         public DbSet<PostViewer> PostViewers { get; set; } = null!;
+        public DbSet<PostDrawing> PostDrawings { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,6 +22,12 @@ namespace FiniteBlog.Data
                 .HasOne(pv => pv.Post)
                 .WithMany(p => p.Viewers)
                 .HasForeignKey(pv => pv.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostDrawing>()
+                .HasOne(pd => pd.Post)
+                .WithMany(p => p.Drawings)
+                .HasForeignKey(pd => pd.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

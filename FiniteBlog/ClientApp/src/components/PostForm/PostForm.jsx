@@ -8,10 +8,10 @@ const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
   const fileInputRef = useRef(null);
 
   const handleSubmit = useCallback(() => {
-    // Allow empty content if a file is attached
-    if (!content.trim() && !fileInputRef.current.files.length) {
+    // Require text content for all posts
+    if (!content.trim()) {
       // Display error in parent component
-      onSubmit(null, 'Please add text or attach a file');
+      onSubmit(null, 'Please add text to your post');
       return;
     }
 

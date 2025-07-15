@@ -5,8 +5,8 @@ const PostFooter = memo(({ createdAt, slug }) => {
   return (
     <div className="post-footer">
       <div className="post-footer-content">
-        <div>Created <TimeAgo date={createdAt} /></div>
-        <div>ID: {slug}</div>
+        <div><TimeAgo date={createdAt} /></div>
+        <div>{slug}</div>
       </div>
     </div>
   );

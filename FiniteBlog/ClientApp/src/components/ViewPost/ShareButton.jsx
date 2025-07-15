@@ -1,18 +1,17 @@
 import React, { memo } from 'react';
 
-const ShareButton = memo(({ slug, onShareClick }) => {
-  return (
-    <div className="share-container">
-      <button
-        className="share-button"
-        onClick={() => onShareClick && onShareClick()}
-      >
-        Share
-      </button>
-    </div>
-  );
+const ShareButton = memo(({ onShareClick }) => {
+    return (
+        <div className="share-container">
+            <button
+                className="share-button"
+                onClick={() => onShareClick && onShareClick()}
+            >
+                Share
+            </button>
+        </div>
+    );
 });
 
 ShareButton.displayName = 'ShareButton';
-
-export default ShareButton; 
+export default ShareButton;

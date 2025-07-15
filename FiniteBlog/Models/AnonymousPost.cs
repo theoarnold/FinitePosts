@@ -16,6 +16,9 @@ namespace FiniteBlog.Models
         public long? AttachedFileSizeBytes { get; set; }
         
         // Navigation property for viewers
-        public ICollection<PostViewer> Viewers { get; set; } = new List<PostViewer>();
+        public ICollection<PostViewer> Viewers { get; set; } = [];
+        
+        // Navigation property for drawings
+        public ICollection<PostDrawing> Drawings { get; set; } = [];
     }
 } 

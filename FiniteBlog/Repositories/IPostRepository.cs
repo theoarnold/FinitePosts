@@ -18,12 +18,18 @@ namespace FiniteBlog.Repositories
 
         Task<bool> HasVisitorViewedPostAsync(Guid postId, string visitorId);
 
-        Task<bool> HasIpViewedPostAsync(Guid postId, string ipAddress);
+        Task<bool> HasFingerprintViewedPostAsync(Guid postId, string browserFingerprint);
 
         Task AddPostViewerAsync(PostViewer viewer);
 
         Task IncrementViewCountAsync(Guid postId);
 
         Task<List<AnonymousPost>> GetRandomPostsAsync(int count);
+
+        Task AddDrawingToPostAsync(PostDrawing drawing);
+
+        Task RemoveDrawingsByFingerprintAsync(Guid postId, string deviceFingerprint);
+
+        Task<List<PostDrawing>> GetDrawingsForPostAsync(Guid postId);
     }
 } 

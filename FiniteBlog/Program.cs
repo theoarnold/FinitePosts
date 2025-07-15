@@ -2,7 +2,6 @@ using FiniteBlog.Data;
 using FiniteBlog.Services;
 using FiniteBlog.Repositories;
 using FiniteBlog.Hubs;
-using FiniteBlog.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +22,6 @@ builder.Services.AddScoped<VisitorCookie>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 
 builder.Services.AddScoped<IPostService, PostService>();
-
-// Configure Azure Storage
-builder.Services.Configure<AzureStorageConfig>(
-    builder.Configuration.GetSection(AzureStorageConfig.SectionName));
 
 builder.Services.AddScoped<IBlobStorageService, AzureBlobStorageService>();
 

@@ -1,59 +1,51 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FiniteBlog.DTOs;
-using FiniteBlog.Models;
-using Microsoft.Extensions.Options;
 
 namespace FiniteBlog.Services
 {
     public class AzureBlobStorageService : IBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
-        private readonly AzureStorageConfig _config;
+        private readonly IConfiguration _config;
         private readonly ILogger<AzureBlobStorageService> _logger;
         private readonly BlobContainerClient _containerClient;
 
         public AzureBlobStorageService(
-            IOptions<AzureStorageConfig> config,
+            IConfiguration config,
             ILogger<AzureBlobStorageService> logger)
         {
-            _config = config.Value;
+            _config = config;
             _logger = logger;
 
-            if (string.IsNullOrEmpty(_config.ConnectionString))
+            string? connectionString = _config["AzureStorage:ConnectionString"];
+            if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException("Azure Storage connection string is not configured.");
             }
 
-            _blobServiceClient = new BlobServiceClient(_config.ConnectionString);
-            _containerClient = _blobServiceClient.GetBlobContainerClient(_config.ContainerName);
+            _blobServiceClient = new BlobServiceClient(connectionString);
+            _containerClient = _blobServiceClient.GetBlobContainerClient(_config["AzureStorage:ContainerName"]);
         }
 
         public async Task<BlobUploadResult> UploadFileAsync(IFormFile file, string? customFileName = null)
         {
+            // Validate file
+            if (!IsValidFileSize(file))
+            {
+                long maxFileSizeBytes = _config.GetValue<long>("AzureStorage:MaxFileSizeBytes");
+                throw new InvalidOperationException($"File size exceeds maximum allowed size of {maxFileSizeBytes / 1024 / 1024}MB");
+            }
+
+            if (!IsValidFileType(file))
+            {
+                throw new InvalidOperationException("File type not supported");
+            }
+
             try
             {
-                // Validate file
-                if (!IsValidFileSize(file))
-                {
-                    return new BlobUploadResult 
-                    { 
-                        Success = false, 
-                        ErrorMessage = $"File size exceeds maximum allowed size of {_config.MaxFileSizeBytes / 1024 / 1024}MB" 
-                    };
-                }
-
-                if (!IsValidFileType(file))
-                {
-                    return new BlobUploadResult 
-                    { 
-                        Success = false, 
-                        ErrorMessage = "File type not supported" 
-                    };
-                }
-
-                // Ensure container exists (private access)
-                await _containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+                // Ensure container exists with public blob access
+                await _containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
 
                 // Generate secure filename
                 string fileName = customFileName ?? GenerateSecureFileName(file.FileName);
@@ -86,21 +78,16 @@ namespace FiniteBlog.Services
 
                 return new BlobUploadResult
                 {
-                    Success = true,
                     FileName = fileName,
-                    Url = blobClient.Uri.ToString(),
+                    Url = GetPublicUrl(fileName),
                     FileSizeBytes = file.Length,
-                    ContentType = file.ContentType
+                    ContentType = file.ContentType ?? string.Empty
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading file {FileName} to blob storage", file.FileName);
-                return new BlobUploadResult
-                {
-                    Success = false,
-                    ErrorMessage = "An error occurred while uploading the file"
-                };
+                throw new InvalidOperationException("An error occurred while uploading the file", ex);
             }
         }
 
@@ -108,11 +95,10 @@ namespace FiniteBlog.Services
         {
             try
             {
-                var blobClient = _containerClient.GetBlobClient(fileName);
-                var response = await blobClient.DeleteIfExistsAsync();
+                BlobClient blobClient = _containerClient.GetBlobClient(fileName);
+                bool response = await blobClient.DeleteIfExistsAsync();
                 
-                _logger.LogInformation("File {FileName} deletion result: {Deleted}", fileName, response.Value);
-                return response.Value;
+                return response;
             }
             catch (Exception ex)
             {
@@ -129,7 +115,7 @@ namespace FiniteBlog.Services
                 
                 if (await blobClient.ExistsAsync())
                 {
-                    return blobClient.Uri.ToString();
+                    return GetPublicUrl(fileName);
                 }
                 
                 return null;
@@ -141,11 +127,18 @@ namespace FiniteBlog.Services
             }
         }
 
+        private string GetPublicUrl(string fileName)
+        {
+            string? cdnEndpoint = _config["AzureStorage:CdnEndpoint"];
+            string? containerName = _config["AzureStorage:ContainerName"];
+            return $"{cdnEndpoint?.TrimEnd('/')}/{containerName}/{fileName}";
+        }
+
         public async Task<bool> FileExistsAsync(string fileName)
         {
             try
             {
-                var blobClient = _containerClient.GetBlobClient(fileName);
+                BlobClient blobClient = _containerClient.GetBlobClient(fileName);
                 var response = await blobClient.ExistsAsync();
                 return response.Value;
             }
@@ -161,21 +154,23 @@ namespace FiniteBlog.Services
             if (string.IsNullOrEmpty(file.ContentType))
                 return false;
 
-            return _config.AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant());
+            var allowedContentTypes = _config.GetSection("AzureStorage:AllowedContentTypes").Get<List<string>>() ?? [];
+            return allowedContentTypes.Contains(file.ContentType.ToLowerInvariant());
         }
 
         public bool IsValidFileSize(IFormFile file)
         {
-            return file.Length > 0 && file.Length <= _config.MaxFileSizeBytes;
+            long maxFileSizeBytes = _config.GetValue<long>("AzureStorage:MaxFileSizeBytes");
+            return file.Length > 0 && file.Length <= maxFileSizeBytes;
         }
 
         private static string GenerateSecureFileName(string originalFileName)
         {
             // Extract file extension
-            var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+            string extension = Path.GetExtension(originalFileName).ToLowerInvariant();
             
             // Generate unique identifier
-            var uniqueId = Guid.NewGuid().ToString("N");
+            string uniqueId = Guid.NewGuid().ToString("N");
             var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss");
             
             // Combine for unique filename

@@ -5,7 +5,7 @@ namespace FiniteBlog.Services
 {
     public interface IPostService
     {
-        Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? ipAddress);
+        Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? deviceFingerprint, string? ipAddress);
 
         Task<(PostDto Post, string? ErrorMessage)> CreatePostAsync(CreatePostDto createDto);
         
@@ -13,6 +13,8 @@ namespace FiniteBlog.Services
 
         Task BroadcastViewCountUpdateAsync(AnonymousPost post);
 
-        Task<List<FeedPostDto>> GetRandomPostsForFeedAsync(int count);
+        Task<List<FeedPostDto>> GetRandomPostsAsync(int count);
+
+        Task AddDrawingToPostAsync(string slug, string text, double positionX, double positionY, string deviceFingerprint);
     }
 } 

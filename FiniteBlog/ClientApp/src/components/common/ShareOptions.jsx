@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './ShareOptions.css';
 
 const ShareOptions = ({ slug }) => {
   const [showShareOptions, setShowShareOptions] = useState(false);
@@ -62,12 +61,7 @@ const ShareOptions = ({ slug }) => {
             setCopySuccess('Copied!');
             setTimeout(() => setCopySuccess(''), 2000);
           })
-<<<<<<< HEAD
           .catch(() => {
-=======
-          .catch(err => {
-            console.error('Could not copy text: ', err);
->>>>>>> 5bcf2bdd885fff5f229a1603fbc60bc31a1a4a62
             setCopySuccess('Failed to copy');
           });
         break;

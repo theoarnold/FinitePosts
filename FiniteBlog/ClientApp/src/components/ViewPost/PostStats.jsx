@@ -14,7 +14,7 @@ const PostStats = memo(({
         <div className="stats-marquee-content">
           {[...Array(3)].map((_, i) => (
             <React.Fragment key={i}>
-              <span>You're Viewer {viewerNumber}/{viewLimit}</span>
+              <span>Viewer {viewerNumber}/{viewLimit}</span>
               <span className="stats-divider">|</span>
               <span>{activeViewers} Viewing Now</span>
               <span className="stats-divider">|</span>

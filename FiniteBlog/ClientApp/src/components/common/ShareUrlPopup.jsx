@@ -29,7 +29,7 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
   };
   
   const fullUrl = `test.com/${postSlug}`;
-  const title = "Check out this disappearing post on FiniteBlog!";
+  const title = "Check out this disappearing post on Wypri!";
   
   const handleCopy = async () => {
     try {

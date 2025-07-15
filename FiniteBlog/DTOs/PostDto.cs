@@ -15,5 +15,8 @@ namespace FiniteBlog.DTOs
         public string? AttachedFileUrl { get; set; }
         public string? AttachedFileContentType { get; set; }
         public long? AttachedFileSizeBytes { get; set; }
+        
+        // Drawings
+        public List<PostDrawingDto> Drawings { get; set; } = new List<PostDrawingDto>();
     }
 } 

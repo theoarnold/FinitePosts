@@ -23,19 +23,70 @@ namespace FiniteBlog.Controllers
         }
 
         [HttpGet("{slug}")]
-        public async Task<ActionResult<object>> GetPost(string slug)
+        public async Task<ActionResult<PostDto>> GetPost(string slug, [FromQuery] string? deviceFingerprint)
         {
-            string visitorId = _visitorCookie.GetOrCreateVisitorId(HttpContext);
-            string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-            PostDto? post = await _postService.GetPostAsync(slug, visitorId, ipAddress);
-            
-            if (post == null)
+            try
             {
-                return NotFound();
+                string? visitorId = _visitorCookie.GetOrCreateVisitorId(HttpContext);
+                
+                // Extract client IP address
+                string? ipAddress = GetClientIpAddress();
+
+                PostDto? post = await _postService.GetPostAsync(slug, visitorId, deviceFingerprint, ipAddress);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting post {Slug}", slug);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("debug/client-info")]
+        public ActionResult<object> GetClientInfo()
+        {
+            return Ok(new
+            {
+                IpAddress = GetClientIpAddress(),
+                UserAgent = Request.Headers["User-Agent"].ToString(),
+                Timestamp = DateTime.Now
+            });
+        }
+
+        private string? GetClientIpAddress()
+        {
+            // Try to get the real client IP address, accounting for proxies and load balancers
+            string ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            
+            if (!string.IsNullOrEmpty(ipAddress))
+            {
+                // X-Forwarded-For can contain multiple IPs, take the first one (original client)
+                ipAddress = ipAddress.Split(',')[0].Trim();
             }
             
-            return post;
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
+            }
+            
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            }
+            
+            // Remove IPv6 localhost mapping
+            if (ipAddress == "::1")
+            {
+                ipAddress = "127.0.0.1";
+            }
+            
+            return ipAddress;
         }
 
         [HttpGet]
@@ -46,7 +97,7 @@ namespace FiniteBlog.Controllers
                 return BadRequest("Count must be between 1 and 100.");
             }
 
-            var posts = await _postService.GetRandomPostsForFeedAsync(count);
+            var posts = await _postService.GetRandomPostsAsync(count);
             return Ok(posts);
         }
 

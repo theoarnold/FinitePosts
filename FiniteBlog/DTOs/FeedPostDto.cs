@@ -9,5 +9,7 @@ namespace FiniteBlog.DTOs
         public int CurrentViews { get; set; }
         public int ActiveViewers { get; set; }
         public bool HasAttachment { get; set; }
+        public string? AttachedFileUrl { get; set; }
+        public string? AttachedFileContentType { get; set; }
     }
 } 

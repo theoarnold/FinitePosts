@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
+import TimeAgo from 'react-timeago';
 
-const FeedPost = React.memo(({ post, onPostClick, formatTimeAgo, onRegisterElement, onUnregisterElement }) => {
+const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPost }) => {
   const postRef = useRef(null);
 
   const handleClick = () => {
@@ -9,32 +10,44 @@ const FeedPost = React.memo(({ post, onPostClick, formatTimeAgo, onRegisterEleme
 
   // Register/unregister this post element for visibility tracking
   useEffect(() => {
-    if (postRef.current && onRegisterElement) {
-      onRegisterElement(post.slug, postRef.current);
+    if (postRef.current && onRegisterPost) {
+      onRegisterPost(post.slug, postRef.current);
     }
 
     return () => {
-      if (onUnregisterElement) {
-        onUnregisterElement(post.slug);
+      if (onUnregisterPost) {
+        onUnregisterPost(post.slug);
       }
     };
-  }, [post.slug, onRegisterElement, onUnregisterElement]);
+  }, [post.slug]); // Only depend on the slug, not the functions
+
+  // Check if post has an image attachment
+  const hasImageAttachment = post.hasAttachment && 
+    post.attachedFileContentType && 
+    post.attachedFileContentType.startsWith('image/');
 
   return (
     <div
       ref={postRef}
-      className="feed-post"
+      className={`feed-post ${hasImageAttachment ? 'feed-post-with-image' : ''}`}
       onClick={handleClick}
+      style={hasImageAttachment ? {
+        backgroundImage: `url(${post.attachedFileUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      } : {}}
     >
-      <div className="feed-post-header">
-        <span className="post-time">{formatTimeAgo(post.createdAt)}</span>
+      {hasImageAttachment && <div className="feed-post-blur-overlay"></div>}
+      
+      <div className={`feed-post-header ${hasImageAttachment ? 'inverted-text' : ''}`}>
+        <span className="post-time"><TimeAgo date={post.createdAt} /></span>
         <span className="post-stats">
           {post.currentViews}/{post.viewLimit} views
-          {post.hasAttachment && <span className="attachment-indicator">📎</span>}
         </span>
       </div>
       
-      <div className="feed-post-preview">
+      <div className={`feed-post-preview ${hasImageAttachment ? 'inverted-text' : ''}`}>
         {post.preview || '(Image/File only)'}
       </div>
       

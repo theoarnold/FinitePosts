@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using FiniteBlog.Services;
 
 namespace FiniteBlog.Hubs
 {
@@ -6,11 +7,13 @@ namespace FiniteBlog.Hubs
     {
         private readonly ConnectionManager _connectionManager;
         private readonly ILogger<PostHub> _logger;
+        private readonly IPostService _postService;
 
-        public PostHub(ConnectionManager connectionManager, ILogger<PostHub> logger)
+        public PostHub(ConnectionManager connectionManager, ILogger<PostHub> logger, IPostService postService)
         {
             _connectionManager = connectionManager;
             _logger = logger;
+            _postService = postService;
         }
 
         public async Task JoinPostGroup(string slug)
@@ -58,7 +61,30 @@ namespace FiniteBlog.Hubs
             _logger.LogInformation($"Client {Context.ConnectionId} successfully left group for post {slug}");
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public async Task SendTextAnnotation(string slug, string text, double positionX, double positionY)
+        {
+            try
+            {
+                // Get device fingerprint from query parameters or headers
+                string deviceFingerprint = Context.GetHttpContext().Request.Query["deviceFingerprint"].FirstOrDefault() ?? 
+                                          Context.GetHttpContext().Request.Headers["X-Device-Fingerprint"].FirstOrDefault() ?? 
+                                          Context.ConnectionId; // Fallback to connection ID
+
+                // Save the text annotation to database
+                await _postService.AddDrawingToPostAsync(slug, text, positionX, positionY, deviceFingerprint);
+
+                // Broadcast the text annotation to all viewers in the post group except the sender
+                await Clients.GroupExcept(slug, Context.ConnectionId).SendAsync("ReceiveTextAnnotation", new { slug, text, positionX, positionY, deviceFingerprint });
+                
+                _logger.LogInformation($"Client {Context.ConnectionId} sent and saved text annotation to post {slug}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error handling text annotation submission for post {slug} from client {Context.ConnectionId}");
+            }
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             _logger.LogInformation($"Client {Context.ConnectionId} disconnected from SignalR");
             await _connectionManager.RemoveConnection(Context.ConnectionId);

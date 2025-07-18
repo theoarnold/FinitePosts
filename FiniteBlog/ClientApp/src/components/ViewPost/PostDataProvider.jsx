@@ -28,7 +28,8 @@ const PostDataProvider = ({ slug, children }) => {
                 // Create an abort controller for this request
                 abortControllerRef.current = new AbortController();
                 
-                const result = await postService.getPost(slug, abortControllerRef.current.signal);
+                // First, get post data without view counting for faster initial load
+                const result = await postService.getPostData(slug, abortControllerRef.current.signal);
                 
                 if (result.error === 'NOT_FOUND') {
                     setIsDeleted(true);
@@ -45,21 +46,10 @@ const PostDataProvider = ({ slug, children }) => {
                 if (result.data) {
                     setPost(result.data);
                     setCurrentViews(result.data.currentViews);
+                    setLoading(false);
                     
-                    // Check if this is a fresh visitor and set viewer number
-                    if (loading) {
-                        const viewerKey = `viewer-number-${slug}`;
-                        const savedViewerNumber = localStorage.getItem(viewerKey);
-                        
-                        if (savedViewerNumber) {
-                            setViewerNumber(parseInt(savedViewerNumber));
-                        } else {
-                            localStorage.setItem(viewerKey, result.data.currentViews.toString());
-                            setViewerNumber(result.data.currentViews);
-                        }
-                        
-                        setLoading(false);
-                    }
+                    // Process view count in the background (don't await this)
+                    processViewCountInBackground();
                 }
             } catch (err) {
                 // Handle aborted requests
@@ -67,20 +57,60 @@ const PostDataProvider = ({ slug, children }) => {
                     return;
                 }
                 
-                console.error('Error fetching post:', err);
-                setError('An error occurred while fetching the post');
+                // Error fetching post
+                setError('Failed to load post');
                 setLoading(false);
             }
         };
 
-        fetchPost();
+        const processViewCountInBackground = async () => {
+            try {
+                // Create a new abort controller for the view counting request
+                const viewCountController = new AbortController();
+                
+                const viewResult = await postService.processPostView(slug, viewCountController.signal);
+                
+                if (viewResult.data) {
+                    // Update the current views with the result from view counting
+                    setCurrentViews(viewResult.data.currentViews);
+                    
+                    // Calculate viewer number AFTER view counting is processed
+                    const viewerKey = `viewer-number-${slug}`;
+                    const savedViewerNumber = localStorage.getItem(viewerKey);
+                    
+                    if (savedViewerNumber) {
+                        setViewerNumber(parseInt(savedViewerNumber));
+                    } else {
+                        // Use the updated view count for viewer number calculation
+                        localStorage.setItem(viewerKey, viewResult.data.currentViews.toString());
+                        setViewerNumber(viewResult.data.currentViews);
+                    }
+                    
+                    // If the post was deleted after reaching view limit
+                    if (viewResult.data.isDeleted) {
+                        setIsDeleted(true);
+                    }
+                }
+            } catch (err) {
+                // Silently handle view counting errors to not affect the user experience
+                // The post content is already loaded, so view counting failures shouldn't break the UI
+                if (err.name !== 'AbortError') {
+                    // View counting failed
+                }
+            }
+        };
 
+        if (slug) {
+            fetchPost();
+        }
+
+        // Cleanup function
         return () => {
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
             }
         };
-    }, [slug, loading]);
+    }, [slug]);
 
     const value = {
         post,

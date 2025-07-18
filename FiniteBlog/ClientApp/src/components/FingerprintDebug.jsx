@@ -150,7 +150,6 @@ const FingerprintDebug = () => {
       setRawData(rawResult);
       
     } catch (error) {
-      console.error('Error generating fingerprint:', error);
       setFingerprint({ error: error.message });
     }
     setLoading(false);

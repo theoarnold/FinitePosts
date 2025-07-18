@@ -5,15 +5,15 @@ import ShareUrlPopup from '../common/ShareUrlPopup';
 import { usePostData } from './PostDataProvider';
 
 const PostActions = ({ isDrawing, onToggleDrawing, drawingDisabled, slug }) => {
-    const { post, viewerNumber } = usePostData();
+    const { post, currentViews } = usePostData();
     const [showSharePopup, setShowSharePopup] = useState(false);
 
-    // Auto-show share popup for the first viewer (original creator)
+    // Auto-show share popup for the first view (original creator)
     useEffect(() => {
-        if (post && viewerNumber === 1) {
+        if (post && currentViews < 1) {
             setShowSharePopup(true);
         }
-    }, [post, viewerNumber]);
+    }, [post, currentViews]);
 
     return (
         <>

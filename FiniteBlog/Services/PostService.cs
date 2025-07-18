@@ -28,7 +28,7 @@ namespace FiniteBlog.Services
             _connectionManager = connectionManager;
         }
 
-        public async Task<PostDto?> GetPostAsync(string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
+        public async Task<PostDto?> GetPostAsync(string slug)
         {
             AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
             if (post == null)
@@ -36,19 +36,11 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-            await ProcessViewCountAsync(post, slug, visitorId, deviceFingerprint, ipAddress);
-
-            var updatedPost = await _repository.GetPostBySlugAsync(slug);
-            if (updatedPost == null)
-            {
-                return null; // Post was deleted after reaching view limit
-            }
-
             // Get current active viewers count
             int activeViewers = _connectionManager.GetActiveViewerCount(slug);
 
             // Get drawings for this post
-            List<PostDrawing> drawings = await _repository.GetDrawingsForPostAsync(updatedPost.Id);
+            List<PostDrawing> drawings = await _repository.GetDrawingsForPostAsync(post.Id);
             List<PostDrawingDto> drawingDtos = drawings.Select(d => new PostDrawingDto
             {
                 Id = d.Id,
@@ -61,21 +53,51 @@ namespace FiniteBlog.Services
 
             PostDto postDto = new PostDto
             {
-                Id = updatedPost.Id,
-                Content = updatedPost.Content,
-                Slug = updatedPost.Slug,
-                ViewLimit = updatedPost.ViewLimit,
-                CurrentViews = updatedPost.CurrentViews,
-                CreatedAt = updatedPost.CreatedAt,
-                AttachedFileName = updatedPost.AttachedFileName,
-                AttachedFileUrl = updatedPost.AttachedFileUrl,
-                AttachedFileContentType = updatedPost.AttachedFileContentType,
-                AttachedFileSizeBytes = updatedPost.AttachedFileSizeBytes,
+                Id = post.Id,
+                Content = post.Content,
+                Slug = post.Slug,
+                ViewLimit = post.ViewLimit,
+                CurrentViews = post.CurrentViews,
+                CreatedAt = post.CreatedAt,
+                AttachedFileName = post.AttachedFileName,
+                AttachedFileUrl = post.AttachedFileUrl,
+                AttachedFileContentType = post.AttachedFileContentType,
+                AttachedFileSizeBytes = post.AttachedFileSizeBytes,
                 ActiveViewers = activeViewers,
                 Drawings = drawingDtos
             };
 
             return postDto;
+        }
+
+        public async Task<ViewCountDto?> ProcessPostViewAsync(string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
+        {
+            AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
+            if (post == null)
+            {
+                return null;
+            }
+
+            await ProcessViewCountAsync(post, slug, visitorId, deviceFingerprint, ipAddress);
+
+            AnonymousPost? updatedPost = await _repository.GetPostBySlugAsync(slug);
+            if (updatedPost == null)
+            {
+                // Post was deleted after reaching view limit
+                return new ViewCountDto
+                {
+                    Slug = slug,
+                    CurrentViews = post.ViewLimit,
+                    ViewLimit = post.ViewLimit,
+                };
+            }
+
+            return new ViewCountDto
+            {
+                Slug = updatedPost.Slug,
+                CurrentViews = updatedPost.CurrentViews,
+                ViewLimit = updatedPost.ViewLimit,
+            };
         }
 
         private async Task ProcessViewCountAsync(AnonymousPost post, string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
@@ -130,6 +152,8 @@ namespace FiniteBlog.Services
                                 }
                             }
                             
+                            await _repository.DeletePostViewersAsync(updatedPost.Id);
+                            await _repository.DeletePostDrawingsAsync(updatedPost.Id);
                             await _repository.DeletePostAsync(updatedPost);
                             await _repository.SaveChangesAsync();
                         }

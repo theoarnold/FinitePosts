@@ -32,8 +32,15 @@ namespace FiniteBlog.Controllers
                 // Extract client IP address
                 string? ipAddress = GetClientIpAddress();
 
-                PostDto? post = await _postService.GetPostAsync(slug, visitorId, deviceFingerprint, ipAddress);
+                // Process the view count first
+                var viewResult = await _postService.ProcessPostViewAsync(slug, visitorId, deviceFingerprint, ipAddress);
+                if (viewResult == null)
+                {
+                    return NotFound();
+                }
 
+                // Get the post data
+                PostDto? post = await _postService.GetPostAsync(slug);
                 if (post == null)
                 {
                     return NotFound();
@@ -44,6 +51,53 @@ namespace FiniteBlog.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting post {Slug}", slug);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("{slug}/data")]
+        public async Task<ActionResult<PostDto>> GetPostData(string slug)
+        {
+            try
+            {
+                PostDto? post = await _postService.GetPostAsync(slug);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting post data {Slug}", slug);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("{slug}/view")]
+        public async Task<ActionResult<ViewCountDto>> ProcessPostView(string slug, [FromQuery] string? deviceFingerprint)
+        {
+            try
+            {
+                string? visitorId = _visitorCookie.GetOrCreateVisitorId(HttpContext);
+                
+                // Extract client IP address
+                string? ipAddress = GetClientIpAddress();
+
+                ViewCountDto? result = await _postService.ProcessPostViewAsync(slug, visitorId, deviceFingerprint, ipAddress);
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing view for post {Slug}", slug);
                 return StatusCode(500, "Internal server error");
             }
         }

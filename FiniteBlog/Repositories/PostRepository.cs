@@ -63,6 +63,18 @@ namespace FiniteBlog.Repositories
             await _context.PostViewers.AddAsync(viewer);
         }
 
+        public async Task DeletePostViewersAsync(Guid postId)
+        {
+            var viewers = _context.PostViewers.Where(pv => pv.PostId == postId);
+            _context.PostViewers.RemoveRange(viewers);
+        }
+
+        public async Task DeletePostDrawingsAsync(Guid postId)
+        {
+            var drawings = _context.PostDrawings.Where(pd => pd.PostId == postId);
+            _context.PostDrawings.RemoveRange(drawings);
+        }
+
         public async Task<bool> HasFingerprintViewedPostAsync(Guid postId, string browserFingerprint)
         {
             return await _context.PostViewers

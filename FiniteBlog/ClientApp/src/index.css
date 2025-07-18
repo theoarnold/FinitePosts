@@ -1,9 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
 
+/* Live indicator pulse animation */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Color variables */
 :root {
-  --primary-color: #0d4599;
-  --primary-hover: #03307a;
+  --primary-color: #2a39c7;
+  --primary-hover: #1f2b96;
   --bg-color: #f8f4e5;
   --card-bg: #fff9e6;
   --border-color: #ddd;
@@ -51,6 +67,8 @@ body {
     padding: 0 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .navbar-brand {
@@ -61,13 +79,22 @@ body {
   letter-spacing: 0.5px;
 }
 
+.alpha-badge {
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: #999;
+  margin-left: 3px;
+  vertical-align: super;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
 .navbar-link {
   color: white;
   text-decoration: underline;
   font-size: 14px;
-  margin-left: auto;
-  margin-right: 40px;
   font-weight: bold;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 code {
@@ -244,15 +271,7 @@ button:disabled {
 
 
 
-/* Add marquee animation */
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-33.33%);
-  }
-}
+/* Marquee styles for react-fast-marquee */
 
 .stats-marquee {
   white-space: nowrap;
@@ -264,13 +283,45 @@ button:disabled {
   border-top-right-radius: 12px;
 }
 
+.marquee-indicator {
+  position: absolute;
+  top: 0px;
+  left: 8px;
+  color: #4CAF50;
+  font-size: 14px;
+  z-index: 10;
+  animation: blink 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.marquee-progress-bar {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(221, 221, 221, 0.3);
+  border-radius: 0;
+  overflow: hidden;
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+}
+
+.marquee-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4CAF50 0%, #FF9800 50%, #f44336 100%);
+  transition: clip-path 0.3s ease;
+  border-radius: 2px;
+}
+
 .stats-marquee-content {
-  display: inline-block;
-  animation: marquee 12s linear infinite;
-  padding-left: 0;
-  width: fit-content;
   font-weight: bold;
-  min-width: 300%;
+  white-space: nowrap;
+}
+
+.stats-marquee-content span {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .stats-marquee-content .diamond {
@@ -334,7 +385,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  background-color: #a8263a;
+  background-color: #c72455;
   color: white;
   border: none;
   border-radius: 6px;
@@ -352,15 +403,15 @@ button:disabled {
 }
 
 .draw-button:hover {
-  background-color: #8f1e2f;
+  background-color: #b01f47;
 }
 
 .draw-button.drawing-mode {
-  background-color: #1e7a3a;
+  background-color: #2a9d4f;
 }
 
 .draw-button.drawing-mode:hover {
-  background-color: #186631;
+  background-color: #238a44;
 }
 
 .draw-button.disabled {
@@ -1307,7 +1358,8 @@ button:disabled {
 }
 
 .view-limit-label {
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: bold;
   color: #333;
   display: inline-block;
   margin-top: 0;
@@ -1607,6 +1659,13 @@ button:disabled {
   text-shadow: 2px 2px 4px rgba(255, 249, 230, 1), 1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 3px rgba(255, 249, 230, 1), 0px 0px 6px rgba(255, 249, 230, 1), 3px 3px 6px rgba(255, 249, 230, 1), -1px -1px 2px rgba(255, 249, 230, 1), -2px -2px 4px rgba(255, 249, 230, 1), 1px -1px 2px rgba(255, 249, 230, 1), -1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 8px rgba(255, 249, 230, 1);
 }
 
+/* Add top margin for home button on desktop only */
+@media (min-width: 769px) {
+  .post-content {
+    margin-top: 2.5rem; /* Space for home button */
+  }
+}
+
 .post-content::selection {
   text-shadow: none;
   background-color: #333333;
@@ -1755,6 +1814,14 @@ button:disabled {
     margin-right: 0;
 }
 
+/* Manifesto styling */
+.card p {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 400;
+}
+
 .post-footer-content {
     display: flex;
     justify-content: space-between;
@@ -1783,7 +1850,7 @@ button:disabled {
     justify-content: center;
     align-items: flex-start;
     padding-top: 15vh;
-    z-index: 1000;
+    z-index: 9999; /* Increased z-index to ensure it's above everything */
     animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -1851,6 +1918,8 @@ button:disabled {
     transition: all 0.2s ease;
     white-space: nowrap;
     min-width: 60px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .copy-button:hover {
@@ -1879,6 +1948,8 @@ button:disabled {
     cursor: pointer;
     font-size: 0.9rem;
     width: 100%;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .back-button:hover {
@@ -1946,6 +2017,8 @@ button:disabled {
     transition: all 0.2s ease;
     font-size: 0.95rem;
     width: 100%;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .download-button:hover {
@@ -1978,6 +2051,13 @@ button:disabled {
     color: white;
     font-size: 0.9rem;
     grid-column: span 2;
+    background-color: #666;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.social-button:hover {
+    background-color: #555;
 }
 
 .social-button.twitter {
@@ -2165,11 +2245,26 @@ button:disabled {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   text-decoration: none;
+  margin: 0;
 }
 
 .write-post-button:hover {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
+}
+
+.write-post-container {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 5px 0.75rem;
+  border-radius: 6px;
+  margin: 0.25rem 0 1rem 0;
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 /* Override container constraints for feed page */
@@ -2190,15 +2285,22 @@ button:disabled {
   font-size: 0.8rem;
   font-weight: bold;
   padding: 0.3rem 0;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  margin-top: 0;
-  transition: all 0.2s ease;
+  border-radius: 0 0 6px 0; /* Only bottom-right corner rounded */
+  margin: 0;
   border: none;
   cursor: pointer;
   width: 80px;
-  position: relative;
-  z-index: 10;
+  position: absolute;
+  top: calc(100% - 1.5rem + 0px); /* Position above the progress bar */
+  left: -0.75rem; /* Align with the left edge of personal-viewer-counter */
+  z-index: 5;
+}
+
+/* Hide home button on mobile */
+@media (max-width: 768px) {
+  .home-link {
+    display: none;
+  }
 }
 
 .home-link:hover {
@@ -2237,6 +2339,8 @@ button:disabled {
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(5px);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .feed-post:hover {
@@ -2293,9 +2397,9 @@ button:disabled {
 
 .progress-bar {
   width: 100%;
-  height: 4.6px; /* 15% thicker: 4px * 1.15 = 4.6px */
+  height: 8.3px; /* 10% less thick: 9.2px * 0.9 = 8.3px */
   background-color: rgba(221, 221, 221, 0.5);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
   position: relative;
 }
@@ -2342,9 +2446,20 @@ button:disabled {
 
 /* Navbar updates for multiple links */
 .navbar-links {
-  margin-left: auto;
+  margin-left: auto; /* Move manifesto back to the right on desktop */
   display: flex;
   gap: 2rem;
+}
+
+/* Hide feed link on desktop */
+@media (min-width: 769px) {
+  .feed-link {
+    display: none;
+  }
+  
+  .navbar-links {
+    margin-right: 2rem; /* Add some margin from the right edge on desktop */
+  }
 }
 
 @media (max-width: 768px) {
@@ -2393,11 +2508,33 @@ button:disabled {
   
   .navbar-links {
     gap: 1rem;
+    margin-left: auto; /* Keep links on the right on mobile */
     margin-right: 2rem;
   }
   
   .navbar-link {
     margin-right: 0;
+  }
+  
+  .stats-marquee {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0;
+  }
+  
+  .stats-marquee-content {
+    font-size: 0.9375rem;
+  }
+  
+  /* Reduce font sizes by 1px on mobile */
+  .post-content,
+  .post-body {
+    font-size: 1rem;
+  }
+  
+  .feed-post-preview {
+    font-size: 1rem;
   }
 }
 

@@ -222,7 +222,7 @@ const PostTextArea = memo(({
               {isTyping && (
                 <div className="word-counter">
                   <div className="word-counter-content">
-                    {getWordCount()}{getWordCount() < 100 && <span className="word-suffix">&nbsp;word{getWordCount() !== 1 ? 's' : ''}</span>}
+                    {getWordCount()}{getWordCount() < 100 && !isMobile && <span className="word-suffix">&nbsp;word{getWordCount() !== 1 ? 's' : ''}</span>}
                   </div>
                 </div>
               )}

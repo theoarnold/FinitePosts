@@ -82,7 +82,7 @@ const FeedDataProvider = ({ children }) => {
                 const isRecent = feedState.timestamp && (Date.now() - feedState.timestamp) < 10 * 60 * 1000;
                 
                 if (isRecent && feedState.posts && feedState.posts.length > 0) {
-                    console.log('🔄 Found saved feed state, restoring...');
+            
                     setPosts(feedState.posts);
                     setIsRestored(true);
                     setLoading(false);
@@ -92,7 +92,7 @@ const FeedDataProvider = ({ children }) => {
                     sessionStorage.removeItem('feed-state');
                 }
             } catch (e) {
-                console.error('Error parsing saved feed state:', e);
+                // Error parsing saved feed state
                 sessionStorage.removeItem('feed-state');
             }
         }

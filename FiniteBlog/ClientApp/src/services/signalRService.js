@@ -47,9 +47,9 @@ class SignalRService {
       try {
         const { default: fingerprintService } = await import('./fingerprint');
         deviceFingerprint = await fingerprintService.getFingerprint();
-      } catch (err) {
-        console.warn('Could not get device fingerprint for SignalR connection:', err);
-      }
+              } catch (err) {
+            // Could not get device fingerprint for SignalR connection
+        }
 
       const connectionUrl = deviceFingerprint 
         ? `${API_BASE_URL}/posthub?deviceFingerprint=${encodeURIComponent(deviceFingerprint)}`
@@ -133,9 +133,9 @@ class SignalRService {
     try {
       await connection.invoke("JoinPostGroup", slug);
       this.joinedGroups.add(slug);
-    } catch (err) {
-      console.error('Error joining group:', slug, err);
-    }
+            } catch (err) {
+            // Error joining group
+        }
   }
 
   async leaveGroup(slug) {
@@ -146,9 +146,9 @@ class SignalRService {
     try {
       await this.connection.invoke("LeavePostGroup", slug);
       this.joinedGroups.delete(slug);
-    } catch (err) {
-      console.error('Error leaving group:', slug, err);
-    }
+            } catch (err) {
+            // Error leaving group
+        }
   }
 
   async requestViewerCount(slug) {
@@ -167,7 +167,6 @@ class SignalRService {
       try {
         await connection.invoke("SendTextAnnotation", slug, text, positionX, positionY);
       } catch (err) {
-        console.error('Error sending text annotation:', err);
         throw err;
       }
     } else {

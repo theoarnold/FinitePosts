@@ -7,10 +7,10 @@ module.exports = function(app) {
     secure: false,
     onProxyReq: (proxyReq, req, res) => {
       // Log proxy requests for debugging
-      console.log('Proxying:', req.method, req.url, 'to', proxyReq.path);
+    
     },
     onError: (err, req, res) => {
-      console.error('Proxy error:', err);
+              // Proxy error
     }
   });
 

@@ -17,9 +17,7 @@ function App() {
     });
   }, []);
 
-  const handleNavbarClick = () => {
-    navigate('/');
-  };
+
 
   const handleManifestoClick = (e) => {
     e.stopPropagation();
@@ -29,14 +27,29 @@ function App() {
     e.stopPropagation();
   };
 
+  const handleNavbarClick = (e) => {
+    // Don't navigate if clicking on navbar links
+    if (e.target.closest('.navbar-links')) {
+      return;
+    }
+    e.stopPropagation();
+  };
+
+
+
+  const handleFeedClick = (e) => {
+    e.stopPropagation();
+  };
+
   return (
     <>
-      <div className="navbar" onClick={handleNavbarClick} style={{ cursor: 'pointer' }}>
-        <Link to="/" className="navbar-brand">wypri</Link>
+      <Link to="/" className="navbar" onClick={handleNavbarClick} style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', width: '100%' }}>
+        <span className="navbar-brand">wypri<span className="alpha-badge">Beta</span></span>
         <div className="navbar-links">
           <Link to="/manifesto" className="navbar-link" onClick={handleManifestoClick}>manifesto</Link>
+          <Link to="/" className="navbar-link feed-link" onClick={handleFeedClick}>feed</Link>
         </div>
-      </div>
+      </Link>
       <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />

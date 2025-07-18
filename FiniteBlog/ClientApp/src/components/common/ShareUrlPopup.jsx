@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 
 const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
@@ -28,7 +29,7 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     }
   };
   
-  const fullUrl = `test.com/${postSlug}`;
+  const fullUrl = `wypri.com/${postSlug}`;
   const title = "Check out this disappearing post on Wypri!";
   
   const handleCopy = async () => {
@@ -101,7 +102,7 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
     }
   };
   
-  return (
+  const popupContent = (
     <div className={`popup-overlay ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
       <div className="popup-container" onClick={(e) => e.stopPropagation()}>
         <div className="popup-content">
@@ -208,6 +209,9 @@ const ShareUrlPopup = ({ isVisible, onClose, postSlug }) => {
       </div>
     </div>
   );
+
+  // Use createPortal to render at document.body level
+  return createPortal(popupContent, document.body);
 };
 
 export default ShareUrlPopup; 

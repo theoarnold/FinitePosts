@@ -17,13 +17,13 @@ const FeedStatePersistence = ({ feedRef }) => {
                         if (feedRef.current && feedState.scrollTop !== undefined) {
                             requestAnimationFrame(() => {
                                 feedRef.current.scrollTop = feedState.scrollTop;
-                                console.log('📍 Set scroll to:', feedState.scrollTop, 'actual:', feedRef.current.scrollTop);
+                        
                                 // Verify and try again if needed
                                 if (feedRef.current.scrollTop !== feedState.scrollTop) {
                                     setTimeout(() => {
                                         requestAnimationFrame(() => {
                                             feedRef.current.scrollTop = feedState.scrollTop;
-                                            console.log('📍 Retry scroll to:', feedState.scrollTop, 'actual:', feedRef.current.scrollTop);
+            
                                         });
                                     }, 100);
                                 }
@@ -41,9 +41,9 @@ const FeedStatePersistence = ({ feedRef }) => {
                         sessionStorage.removeItem('feed-state');
                     }, 400);
                     
-                } catch (e) {
-                    console.error('Error during scroll restoration:', e);
-                }
+                        } catch (e) {
+            // Error during scroll restoration
+        }
             }
         }
     }, [isRestored, posts, feedRef]);
@@ -69,7 +69,7 @@ const FeedStatePersistence = ({ feedRef }) => {
             
             // Only save if we have a meaningful scroll position and posts
             if (feedState.scrollTop >= 0 && feedState.posts.length > 0) {
-                console.log('💾 Saving feed state:', feedState.posts.length, 'posts, scroll:', feedState.scrollTop);
+        
                 sessionStorage.setItem('feed-state', JSON.stringify(feedState));
             }
         }

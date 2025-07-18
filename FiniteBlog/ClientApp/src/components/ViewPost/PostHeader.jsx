@@ -9,7 +9,7 @@ const PostHeader = ({ activeViewers }) => {
     if (!post) return null;
 
     return (
-        <>
+        <div style={{ position: 'relative' }}>
             <PostStats 
                 viewerNumber={viewerNumber}
                 viewLimit={post.viewLimit}
@@ -20,7 +20,7 @@ const PostHeader = ({ activeViewers }) => {
             <Link to="/" className="home-link">
                 &lt; HOME
             </Link>
-        </>
+        </div>
     );
 };
 

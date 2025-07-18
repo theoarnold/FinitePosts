@@ -13,26 +13,39 @@ const api = axios.create({
   withCredentials: true
 });
 
+// Helper function to determine if a request needs fingerprinting
+const needsFingerprint = (config) => {
+  const { method, url } = config;
+  
+  // Only GET and POST requests to posts endpoints need fingerprinting
+  if (!url || !url.includes('/posts/')) {
+    return false;
+  }
+  
+  // POST requests for view counting always need fingerprinting
+  if (method === 'post' && url.includes('/view')) {
+    return true;
+  }
+  
+  // GET requests for individual posts need fingerprinting (for view counting)
+  if (method === 'get' && url.includes('/posts/') && !url.includes('/data')) {
+    return true;
+  }
+  
+  // Feed requests and data-only requests don't need fingerprinting
+  return false;
+};
+
 api.interceptors.request.use(
   async (config) => {
-    if (config.method === 'get' && config.url && config.url.includes('/posts/')) {
+    if (needsFingerprint(config)) {
       try {
-        // For feed requests, use cached fingerprint if available to avoid delays
-        if (config.url.includes('/posts?') || config.url.includes('/posts/feed')) {
-          const cachedFingerprint = fingerprintService.cachedFingerprint;
-          if (cachedFingerprint) {
-            config.params = config.params || {};
-            config.params.deviceFingerprint = cachedFingerprint;
-          }
-          // Don't wait for fingerprint generation for feed requests
-        } else {
-          // For individual post requests, still wait for fingerprint
-          const deviceFingerprint = await fingerprintService.getFingerprint();
-          config.params = config.params || {};
-          config.params.deviceFingerprint = deviceFingerprint;
+        const deviceFingerprint = await fingerprintService.getFingerprint();
+        config.params = config.params || {};
+        config.params.deviceFingerprint = deviceFingerprint;
+              } catch (error) {
+            // Failed to get fingerprint
         }
-      } catch (error) {
-      }
     }
     return config;
   },
@@ -58,6 +71,46 @@ export const postService = {
       return { 
         data: null, 
         error: error.message || 'An error occurred while fetching the post'
+      };
+    }
+  },
+
+  getPostData: async (slug, signal) => {
+    try {
+      const response = await api.get(`/posts/${slug}/data`, { signal });
+      return { data: response.data, error: null };
+    } catch (error) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') {
+        return { data: null, error: null };
+      }
+
+      if (error.response?.status === 404) {
+        return { data: null, error: 'NOT_FOUND' };
+      }
+
+      return { 
+        data: null, 
+        error: error.message || 'An error occurred while fetching the post data'
+      };
+    }
+  },
+
+  processPostView: async (slug, signal) => {
+    try {
+      const response = await api.post(`/posts/${slug}/view`, {}, { signal });
+      return { data: response.data, error: null };
+    } catch (error) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') {
+        return { data: null, error: null };
+      }
+
+      if (error.response?.status === 404) {
+        return { data: null, error: 'NOT_FOUND' };
+      }
+
+      return { 
+        data: null, 
+        error: error.message || 'An error occurred while processing the view'
       };
     }
   }

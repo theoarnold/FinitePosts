@@ -9,12 +9,10 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
     const { post, isDeleted } = usePostData();
     const [receivedAnnotations, setReceivedAnnotations] = useState([]);
     const [isAnnotating, setIsAnnotating] = useState(false);
-    const [showAnnotations, setShowAnnotations] = useState(false);
-    const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    const [showAnnotations, setShowAnnotations] = useState(true); // Changed to true by default
     const [isShortPost, setIsShortPost] = useState(false);
 
     const annotationCanvasRef = useRef(null);
-    const fadeInTimeoutRef = useRef(null);
 
     // Check if post content is short (1 line or less)
     useEffect(() => {
@@ -33,62 +31,6 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
             setIsShortPost(isShortByLength || isShortByHeight);
         }
     }, [post?.content, postContentRef]);
-
-    // Handle annotation fade-in based on scroll position
-    useEffect(() => {
-        if (!post?.content || !postContentRef.current) return;
-
-        const checkScrollPosition = () => {
-            const element = postContentRef.current;
-            if (!element) return false;
-
-            const rect = element.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-            
-            // Check if bottom of post content is visible
-            return rect.bottom <= windowHeight + 20; // 20px tolerance
-        };
-
-        const handleScroll = () => {
-            if (hasScrolledToBottom) return;
-            
-            if (checkScrollPosition()) {
-                setHasScrolledToBottom(true);
-                setShowAnnotations(true);
-            }
-        };
-
-        // Check initial position
-        const isInitiallyAtBottom = checkScrollPosition();
-        
-        if (isInitiallyAtBottom) {
-            // If already at bottom, wait 10 seconds then fade in
-            fadeInTimeoutRef.current = setTimeout(() => {
-                setShowAnnotations(true);
-            }, 10000);
-        } else {
-            // Add scroll listener to detect when user reaches bottom
-            window.addEventListener('scroll', handleScroll);
-        }
-
-        setHasScrolledToBottom(isInitiallyAtBottom);
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (fadeInTimeoutRef.current) {
-                clearTimeout(fadeInTimeoutRef.current);
-            }
-        };
-    }, [post?.content, hasScrolledToBottom]);
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            if (fadeInTimeoutRef.current) {
-                clearTimeout(fadeInTimeoutRef.current);
-            }
-        };
-    }, []);
 
     // Load existing annotations from post data
     useEffect(() => {
@@ -117,7 +59,6 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
 
     // Annotation handlers
     const handleToggleAnnotating = () => {
-        if (!showAnnotations) return; // Don't allow annotation creation before they're revealed
         setIsAnnotating(!isAnnotating);
     };
 
@@ -150,9 +91,9 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
                     annotationCanvasRef.current.clear();
                 }
                 setIsAnnotating(false);
-            } catch (error) {
-                console.error('Error sending annotation:', error);
-            }
+                    } catch (error) {
+            // Error sending annotation
+        }
         }
     };
 
@@ -210,7 +151,7 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
         // Draw button state
         isDrawing: isAnnotating,
         onToggleDrawing: handleToggleAnnotating,
-        drawingDisabled: isDeleted || !showAnnotations,
+        drawingDisabled: isDeleted, // Remove showAnnotations check since it's always true now
         
         // Callback for SignalR
         handleAnnotationReceived

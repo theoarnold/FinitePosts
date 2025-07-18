@@ -1,5 +1,6 @@
-import React, { useRef, memo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useRef, memo, useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useGesture } from '@use-gesture/react';
 import PostDataProvider, { usePostData } from './ViewPost/PostDataProvider';
 import PostRealtime from './ViewPost/PostRealtime';
 import PostAnnotations from './ViewPost/PostAnnotations';
@@ -13,9 +14,92 @@ import ExpiredPost from './common/ExpiredPost';
 const ViewPostContent = memo(() => {
     const { post, loading, error, isDeleted } = usePostData();
     const { slug } = useParams();
+    const navigate = useNavigate();
     
     const postContentRef = useRef(null);
     const cardRef = useRef(null);
+    const pageRef = useRef(null);
+    
+    // State for drag visual feedback
+    const [dragOffset, setDragOffset] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [showArrow, setShowArrow] = useState(false);
+
+    // Prevent body overflow during drag
+    useEffect(() => {
+        if (isDragging && window.innerWidth <= 768) {
+            document.body.style.overflowX = 'hidden';
+        } else {
+            document.body.style.overflowX = '';
+        }
+        
+        return () => {
+            document.body.style.overflowX = '';
+        };
+    }, [isDragging]);
+
+    // Simplified gesture handling with visual feedback - now on full page
+    const bind = useGesture(
+        {
+            onDragStart: ({ event }) => {
+                // Only on mobile resolution
+                if (window.innerWidth > 768) return;
+                
+                // Don't trigger if drag started in navbar area (top 52px)
+                if (event.clientY < 52) return;
+                
+                setIsDragging(true);
+            },
+            onDrag: ({ movement: [mx], direction: [dx], distance, velocity, cancel, event }) => {
+                // Only on mobile resolution
+                if (window.innerWidth > 768) return;
+                
+                // Don't process if drag started in navbar area
+                if (!isDragging) return;
+                
+                // Update visual feedback - move the card with the drag
+                // Apply some resistance so it doesn't move 1:1 with finger
+                const resistance = 0.4;
+                const offset = Math.max(0, mx * resistance); // Only positive (right) movement
+                setDragOffset(offset);
+                
+                // Show arrow when user has dragged significantly (50% of threshold)
+                setShowArrow(mx > 60); // Show arrow at 60px instead of full threshold
+                
+                // Left to right swipe: INCREASED thresholds by 50%
+                // Old: mx > 80 && (velocity[0] > 0.3 || mx > 120)
+                // New: mx > 120 && (velocity[0] > 0.3 || mx > 180)
+                if (mx > 120 && (velocity[0] > 0.3 || mx > 180)) {
+                    cancel();
+                    navigate('/');
+                }
+            },
+            onDragEnd: ({ movement: [mx], velocity }) => {
+                // Reset visual feedback
+                setIsDragging(false);
+                setDragOffset(0);
+                setShowArrow(false);
+                
+                // Only on mobile resolution
+                if (window.innerWidth > 768) return;
+                
+                // Also check on drag end for slower swipes - INCREASED threshold by 50%
+                // Old: mx > 100
+                // New: mx > 150
+                if (mx > 150) {
+                    navigate('/');
+                }
+            }
+        },
+        {
+            drag: {
+                axis: 'x', // Only horizontal dragging
+                threshold: 10,
+                filterTaps: true,
+                preventWindowScrollY: false
+            }
+        }
+    );
 
     // Set up annotations with refs
     const {
@@ -72,30 +156,73 @@ const ViewPostContent = memo(() => {
     }
 
     return (
-        <div ref={cardRef} className="card post-card">
-            <PostHeader activeViewers={activeViewers} />
+        <div 
+            ref={pageRef}
+            style={{ 
+                position: 'relative', 
+                overflowX: 'hidden',
+                overflowY: 'visible',
+                // Removed minHeight - let it be as tall as content needs
+                paddingTop: '52px',
+                marginTop: '-52px'
+            }}
+            {...bind()}
+        >
+            {/* Left arrow indicator */}
+            {showArrow && window.innerWidth <= 768 && (
+                <div style={{
+                    position: 'fixed',
+                    left: '20px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '2rem',
+                    color: '#333',
+                    opacity: Math.min(1, dragOffset / 50),
+                    transition: 'opacity 0.1s ease',
+                    zIndex: 1000,
+                    pointerEvents: 'none'
+                }}>
+                    ←
+                </div>
+            )}
             
-            <PostContentDisplay 
-                postContentRef={postContentRef}
-                isShortPost={isShortPost}
-                isAnnotating={isAnnotating}
-            />
-            
-            {annotationsComponent}
-            
-            <PostActions 
-                isDrawing={isDrawing}
-                onToggleDrawing={onToggleDrawing}
-                drawingDisabled={drawingDisabled}
-                slug={slug}
-            />
-            
-            <PostFooter 
-                createdAt={post.createdAt}
-                slug={slug}
-            />
+            <div 
+                ref={cardRef} 
+                className="card post-card" 
+                style={{ 
+                    touchAction: 'pan-y',
+                    transform: window.innerWidth <= 768 ? `translateX(${dragOffset}px)` : 'none',
+                    opacity: window.innerWidth <= 768 && isDragging ? Math.max(0.7, 1 - (dragOffset / 300)) : 1,
+                    transition: isDragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+                    position: 'relative',
+                    zIndex: 1,
+                    marginTop: '52px'
+                }}
+            >
+                <PostHeader activeViewers={activeViewers} />
+                
+                <PostContentDisplay 
+                    postContentRef={postContentRef}
+                    isShortPost={isShortPost}
+                    isAnnotating={isAnnotating}
+                />
+                
+                {annotationsComponent}
+                
+                <PostActions 
+                    isDrawing={isDrawing}
+                    onToggleDrawing={onToggleDrawing}
+                    drawingDisabled={drawingDisabled}
+                    slug={slug}
+                />
+                
+                <PostFooter 
+                    createdAt={post.createdAt}
+                    slug={slug}
+                />
 
-            <PostStatusIndicator />
+                <PostStatusIndicator />
+            </div>
         </div>
     );
 });

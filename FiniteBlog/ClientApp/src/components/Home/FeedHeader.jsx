@@ -11,12 +11,14 @@ const FeedHeader = ({ onWriteClick }) => {
 
     return (
         <div className="feed-header">
-            <button 
-                className="write-post-button" 
-                onClick={handleWriteClick}
-            >
-                Write a post
-            </button>
+            <div className="write-post-container">
+                <button 
+                    className="write-post-button" 
+                    onClick={handleWriteClick}
+                >
+                    Write a post
+                </button>
+            </div>
         </div>
     );
 };

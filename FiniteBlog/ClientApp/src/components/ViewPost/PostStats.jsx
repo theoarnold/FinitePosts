@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import Marquee from 'react-fast-marquee';
 
 const PostStats = memo(({ 
   viewerNumber, 
@@ -10,19 +11,39 @@ const PostStats = memo(({
 
   return (
     <div className="personal-viewer-counter">
+      <div className="marquee-indicator">●</div>
       <div className="stats-marquee">
-        <div className="stats-marquee-content">
-          {[...Array(3)].map((_, i) => (
-            <React.Fragment key={i}>
-              <span>Viewer {viewerNumber}/{viewLimit}</span>
-              <span className="stats-divider">|</span>
-              <span>{activeViewers} Viewing Now</span>
-              <span className="stats-divider">|</span>
-              <span>{currentViews}/{viewLimit} Views</span>
-              <span className="diamond">◆</span>
-            </React.Fragment>
-          ))}
-        </div>
+        <Marquee
+          speed={50}
+          gradient={false}
+          className="stats-marquee-content"
+          pauseOnHover={false}
+          delay={0}
+          loop={0}
+          play={true}
+          direction="left"
+        >
+          <span>Viewer {viewerNumber}/{viewLimit}</span>
+          <span className="stats-divider">|</span>
+          <span>{activeViewers} Here</span>
+          <span className="stats-divider">|</span>
+          <span>{currentViews}/{viewLimit} Views</span>
+          <span className="diamond">◆</span>
+          <span>Viewer {viewerNumber}/{viewLimit}</span>
+          <span className="stats-divider">|</span>
+          <span>{activeViewers} Here</span>
+          <span className="stats-divider">|</span>
+          <span>{currentViews}/{viewLimit} Views</span>
+          <span className="diamond">◆</span>
+        </Marquee>
+      </div>
+      <div className="marquee-progress-bar">
+        <div 
+          className="marquee-progress-fill"
+          style={{ 
+            clipPath: `inset(0 ${100 - (currentViews / viewLimit) * 100}% 0 0)`
+          }}
+        ></div>
       </div>
     </div>
   );

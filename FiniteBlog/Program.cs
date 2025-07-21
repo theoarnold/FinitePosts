@@ -8,10 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
-        sqlServerOptionsAction: sqlOptions =>
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        ServerVersion.Create(new Version(8, 0, 29), Pomelo.EntityFrameworkCore.MySql.Infrastructure.ServerType.MySql),
+        mysqlOptions =>
         {
-            sqlOptions.EnableRetryOnFailure(
+            mysqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
@@ -63,6 +64,16 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 //});
 
 var app = builder.Build();
+
+// Auto-migrate database on startup (for production)
+if (app.Environment.IsProduction())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

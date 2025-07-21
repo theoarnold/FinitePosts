@@ -21,9 +21,8 @@ const PostRealtime = ({ slug, onAnnotationReceived }) => {
                 if (data.activeViewers !== undefined) {
                     setActiveViewers(data.activeViewers);
                 }
-                if (data.currentViews !== undefined && data.viewLimit !== undefined && data.currentViews >= data.viewLimit) {
-                    setIsDeleted(true);
-                }
+                // Don't immediately expire post when view limit reached via real-time updates
+                // Let users continue viewing until they refresh
             } else if (eventType === 'viewerCount') {
                 if (data.activeViewers !== undefined) {
                     setActiveViewers(data.activeViewers);

@@ -86,10 +86,8 @@ const PostDataProvider = ({ slug, children }) => {
                         setViewerNumber(viewResult.data.currentViews);
                     }
                     
-                    // If the post was deleted after reaching view limit
-                    if (viewResult.data.isDeleted) {
-                        setIsDeleted(true);
-                    }
+                    // Don't immediately show expired message when user triggers deletion
+                    // Let them continue viewing until they refresh (natural 404 will handle it)
                 }
             } catch (err) {
                 // Silently handle view counting errors to not affect the user experience

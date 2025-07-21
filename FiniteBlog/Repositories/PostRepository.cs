@@ -65,13 +65,13 @@ namespace FiniteBlog.Repositories
 
         public async Task DeletePostViewersAsync(Guid postId)
         {
-            var viewers = _context.PostViewers.Where(pv => pv.PostId == postId);
+            IQueryable<PostViewer> viewers = _context.PostViewers.Where(pv => pv.PostId == postId);
             _context.PostViewers.RemoveRange(viewers);
         }
 
         public async Task DeletePostDrawingsAsync(Guid postId)
         {
-            var drawings = _context.PostDrawings.Where(pd => pd.PostId == postId);
+            IQueryable<PostDrawing> drawings = _context.PostDrawings.Where(pd => pd.PostId == postId);
             _context.PostDrawings.RemoveRange(drawings);
         }
 
@@ -91,8 +91,7 @@ namespace FiniteBlog.Repositories
 
         public async Task<List<AnonymousPost>> GetRandomPostsAsync(int count)
         {
-            // Fast approach: Get total count and use random offset with wraparound
-            var totalCount = await _context.AnonymousPosts.CountAsync();
+            int totalCount = await _context.AnonymousPosts.CountAsync();
             
             if (totalCount == 0)
                 return new List<AnonymousPost>();
@@ -101,25 +100,25 @@ namespace FiniteBlog.Repositories
             {
                 return await _context.AnonymousPosts.ToListAsync();
             }
-            
+
             // Generate random starting point and collect posts with wraparound
-            var random = new Random();
-            var startIndex = random.Next(0, totalCount);
-            var posts = new List<AnonymousPost>();
+            Random random = new Random();
+            int startIndex = random.Next(0, totalCount);
+            List<AnonymousPost> posts = new List<AnonymousPost>();
             
             // First batch: from random start to end
-            var firstBatchSize = Math.Min(count, totalCount - startIndex);
-            var firstBatch = await _context.AnonymousPosts
+            int firstBatchSize = Math.Min(count, totalCount - startIndex);
+            List<AnonymousPost> firstBatch = await _context.AnonymousPosts
                 .Skip(startIndex)
                 .Take(firstBatchSize)
                 .ToListAsync();
             posts.AddRange(firstBatch);
             
             // If we need more posts, wrap around to the beginning
-            var remaining = count - firstBatch.Count;
+            int remaining = count - firstBatch.Count;
             if (remaining > 0)
             {
-                var secondBatch = await _context.AnonymousPosts
+                List<AnonymousPost> secondBatch = await _context.AnonymousPosts
                     .Take(remaining)
                     .ToListAsync();
                 posts.AddRange(secondBatch);
@@ -135,7 +134,7 @@ namespace FiniteBlog.Repositories
 
         public async Task RemoveDrawingsByFingerprintAsync(Guid postId, string deviceFingerprint)
         {
-            var existingDrawings = await _context.PostDrawings
+            List<PostDrawing> existingDrawings = await _context.PostDrawings
                 .Where(d => d.PostId == postId && d.CreatedByFingerprint == deviceFingerprint)
                 .ToListAsync();
             

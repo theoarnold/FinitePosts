@@ -43,9 +43,9 @@ api.interceptors.request.use(
         const deviceFingerprint = await fingerprintService.getFingerprint();
         config.params = config.params || {};
         config.params.deviceFingerprint = deviceFingerprint;
-              } catch (error) {
-            // Failed to get fingerprint
-        }
+      } catch (error) {
+        console.warn('Failed to get fingerprint:', error);
+      }
     }
     return config;
   },

@@ -1,13 +1,35 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import TimeAgo from 'react-timeago';
 import randomColor from 'randomcolor';
 
 const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPost }) => {
   const postRef = useRef(null);
+  const touchHandled = useRef(false);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     onPostClick(post.slug);
-  };
+  }, [onPostClick, post.slug]);
+
+  // Optimized touch handler for mobile devices
+  const handleTouchEnd = useCallback((e) => {
+    e.preventDefault(); // Prevent the 300ms click delay
+    touchHandled.current = true;
+    handleClick();
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      touchHandled.current = false;
+    }, 300);
+  }, [handleClick]);
+
+  // Only handle click if touch wasn't already handled
+  const handleClickOptimized = useCallback((e) => {
+    if (touchHandled.current) {
+      e.preventDefault();
+      return;
+    }
+    handleClick();
+  }, [handleClick]);
 
   // Register/unregister this post element for visibility tracking
   useEffect(() => {
@@ -40,7 +62,8 @@ const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPo
     <div
       ref={postRef}
       className={`feed-post ${hasImageAttachment ? 'feed-post-with-image' : ''}`}
-      onClick={handleClick}
+      onClick={handleClickOptimized}
+      onTouchEnd={handleTouchEnd}
       style={{
         ...(hasImageAttachment ? {
           backgroundImage: `url(${post.attachedFileUrl})`,

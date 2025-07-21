@@ -3,6 +3,8 @@ using FiniteBlog.Repositories;
 using FiniteBlog.Hubs;
 using FiniteBlog.DTOs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FiniteBlog.Services
 {
@@ -36,10 +38,8 @@ namespace FiniteBlog.Services
                 return null;
             }
 
-            // Get current active viewers count
             int activeViewers = _connectionManager.GetActiveViewerCount(slug);
 
-            // Get drawings for this post
             List<PostDrawing> drawings = await _repository.GetDrawingsForPostAsync(post.Id);
             List<PostDrawingDto> drawingDtos = drawings.Select(d => new PostDrawingDto
             {
@@ -75,101 +75,143 @@ namespace FiniteBlog.Services
             AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
             if (post == null)
             {
+                _logger.LogWarning("Post not found for slug {PostSlug}", slug);
                 return null;
             }
 
-            await ProcessViewCountAsync(post, slug, visitorId, deviceFingerprint, ipAddress);
-
-            AnonymousPost? updatedPost = await _repository.GetPostBySlugAsync(slug);
-            if (updatedPost == null)
-            {
-                // Post was deleted after reaching view limit
-                return new ViewCountDto
-                {
-                    Slug = slug,
-                    CurrentViews = post.ViewLimit,
-                    ViewLimit = post.ViewLimit,
-                };
-            }
-
-            return new ViewCountDto
-            {
-                Slug = updatedPost.Slug,
-                CurrentViews = updatedPost.CurrentViews,
-                ViewLimit = updatedPost.ViewLimit,
-            };
-        }
-
-        private async Task ProcessViewCountAsync(AnonymousPost post, string slug, string? visitorId, string? deviceFingerprint, string? ipAddress)
-        {
             try
             {
-                _logger.LogInformation($"Processing view count for post {slug}. VisitorId: {visitorId}, DeviceFingerprint: {deviceFingerprint}, IpAddress: {ipAddress}");
+                // Check if user has already viewed this post
+                bool hasViewed = await HasUserViewedPostAsync(post.Id, visitorId, deviceFingerprint, ipAddress);
                 
-                string compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
-                
-                bool hasViewedByCookie = !string.IsNullOrEmpty(visitorId) && await _repository.HasVisitorViewedPostAsync(post.Id, visitorId);
-                bool hasViewedByComposite = !string.IsNullOrEmpty(compositeFingerprint) && await _repository.HasFingerprintViewedPostAsync(post.Id, compositeFingerprint);
-
-                _logger.LogInformation($"Post {slug} - HasViewedByCookie: {hasViewedByCookie}, HasViewedByComposite: {hasViewedByComposite} (Composite: {compositeFingerprint})");
-
-                if (!(hasViewedByCookie || hasViewedByComposite))
+                if (hasViewed)
                 {
-                    _logger.LogInformation($"Recording new view for post {slug} - no previous views detected by any identification method");
-                    
-                    PostViewer viewer = new PostViewer
+                    _logger.LogDebug("Skipping view count for post {PostSlug} - already viewed", post.Slug);
+                    return new ViewCountDto
                     {
-                        Id = Guid.NewGuid(),
-                        PostId = post.Id,
-                        VisitorId = visitorId ?? string.Empty,
-                        BrowserFingerprint = compositeFingerprint,
-                        ViewedAt = DateTime.Now
+                        Slug = post.Slug,
+                        CurrentViews = post.CurrentViews,
+                        ViewLimit = post.ViewLimit
                     };
-                    await _repository.AddPostViewerAsync(viewer);
-
-                    await _repository.IncrementViewCountAsync(post.Id);
-                    await _repository.SaveChangesAsync();
-
-                    AnonymousPost? updatedPost = await _repository.GetPostBySlugAsync(slug);
-                    if (updatedPost != null)
-                    {
-                        _logger.LogInformation($"Post {slug} view count updated to {updatedPost.CurrentViews}/{updatedPost.ViewLimit}");
-                        
-                        if (updatedPost.CurrentViews >= updatedPost.ViewLimit)
-                        {
-                            _logger.LogInformation($"Post {slug} has reached view limit ({updatedPost.ViewLimit}). Deleting post.");
-                            
-                            if (!string.IsNullOrEmpty(updatedPost.AttachedFileName))
-                            {
-                                try
-                                {
-                                    bool fileDeleted = await _blobStorageService.DeleteFileAsync(updatedPost.AttachedFileName);
-                                    _logger.LogInformation($"File cleanup for post {slug}: {(fileDeleted ? "success" : "file not found")} - {updatedPost.AttachedFileName}");
-                                }
-                                catch (Exception fileEx)
-                                {
-                                    _logger.LogWarning(fileEx, $"Failed to delete attached file for post {slug}: {updatedPost.AttachedFileName}");
-                                }
-                            }
-                            
-                            await _repository.DeletePostViewersAsync(updatedPost.Id);
-                            await _repository.DeletePostDrawingsAsync(updatedPost.Id);
-                            await _repository.DeletePostAsync(updatedPost);
-                            await _repository.SaveChangesAsync();
-                        }
-                        
-                        await BroadcastViewCountUpdateAsync(updatedPost);
-                    }
                 }
-                else
+
+                AnonymousPost? updatedPost = await RecordNewViewAsync(post, visitorId, deviceFingerprint, ipAddress);
+                
+                return new ViewCountDto
                 {
-                    _logger.LogInformation($"Skipping view count for post {slug} - already viewed by this visitor (Cookie: {hasViewedByCookie}, Composite: {hasViewedByComposite})");
-                }
+                    Slug = updatedPost.Slug,
+                    CurrentViews = updatedPost.CurrentViews,
+                    ViewLimit = updatedPost.ViewLimit
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing view count for post {Slug}", slug);
+                _logger.LogError(ex, "Unexpected error processing view for post {PostSlug}", slug);
+                throw;
             }
+        }
+
+        private async Task<bool> HasUserViewedPostAsync(Guid postId, string? visitorId, string? deviceFingerprint, string? ipAddress)
+        {
+            if (!string.IsNullOrEmpty(visitorId) && 
+                await _repository.HasVisitorViewedPostAsync(postId, visitorId))
+            {
+                return true;
+            }
+            
+            var compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
+            if (!string.IsNullOrEmpty(compositeFingerprint) && 
+                await _repository.HasFingerprintViewedPostAsync(postId, compositeFingerprint))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
+        private async Task<AnonymousPost> RecordNewViewAsync(AnonymousPost post, string? visitorId, string? deviceFingerprint, string? ipAddress)
+        {
+            _logger.LogInformation("Recording new view for post {PostSlug} - no previous views detected", post.Slug);
+
+            string compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
+            
+            PostViewer? viewer = new PostViewer
+            {
+                Id = Guid.NewGuid(),
+                PostId = post.Id,
+                VisitorId = visitorId ?? string.Empty,
+                BrowserFingerprint = compositeFingerprint,
+                ViewedAt = DateTime.Now
+            };
+
+            await _repository.AddPostViewerAsync(viewer);
+            post.CurrentViews += 1;
+            
+            // EF automatically wraps this in a transaction
+            await _repository.SaveChangesAsync();
+
+            _logger.LogInformation("Post {PostSlug} view count updated to {CurrentViews}/{ViewLimit}",
+                post.Slug, post.CurrentViews, post.ViewLimit);
+
+            // Check if post should be deleted
+            if (post.CurrentViews >= post.ViewLimit)
+            {
+                await HandleViewLimitReachedAsync(post);
+            }
+            else
+            {
+                await BroadcastViewCountUpdateAsync(post);
+            }
+            
+            return post;
+        }
+
+        private async Task HandleViewLimitReachedAsync(AnonymousPost post)
+        {
+            _logger.LogInformation("Post {PostSlug} has reached view limit ({ViewLimit}). Deleting post",
+                post.Slug, post.ViewLimit);
+
+            try
+            {
+                await CleanupAttachedFileAsync(post);
+                await DeletePostAndRelatedDataAsync(post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete post {PostSlug} after reaching view limit", post.Slug);
+                throw;
+            }
+        }
+
+        private async Task CleanupAttachedFileAsync(AnonymousPost post)
+        {
+            if (string.IsNullOrEmpty(post.AttachedFileName))
+                return;
+
+            try
+            {
+                var fileDeleted = await _blobStorageService.DeleteFileAsync(post.AttachedFileName);
+                _logger.LogInformation("File cleanup for post {PostSlug}: {CleanupResult} - {FileName}",
+                    post.Slug, fileDeleted ? "success" : "file not found", post.AttachedFileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete attached file for post {PostSlug}: {FileName}",
+                    post.Slug, post.AttachedFileName);
+                // Don't throw - file cleanup failure shouldn't prevent post deletion
+            }
+        }
+
+        private async Task DeletePostAndRelatedDataAsync(AnonymousPost post)
+        {
+            await _repository.DeletePostViewersAsync(post.Id);
+            await _repository.DeletePostDrawingsAsync(post.Id);
+            await _repository.DeletePostAsync(post);
+            
+            // EF automatically wraps this in a transaction
+            await _repository.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully deleted post {PostSlug} and all related data", post.Slug);
         }
 
         private string CreateCompositeFingerprint(string? deviceFingerprint, string? ipAddress)
@@ -361,7 +403,7 @@ namespace FiniteBlog.Services
 
         public async Task AddDrawingToPostAsync(string slug, string text, double positionX, double positionY, string deviceFingerprint)
         {
-            var post = await _repository.GetPostBySlugAsync(slug);
+            AnonymousPost? post = await _repository.GetPostBySlugAsync(slug);
             if (post == null)
             {
                 return;

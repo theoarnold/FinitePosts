@@ -233,7 +233,7 @@ button {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0.75rem 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -241,6 +241,13 @@ button {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   font-size: 0.9rem;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 button:hover {
@@ -263,7 +270,7 @@ button:disabled {
   display: inline-block;
   padding: 0.25rem 0.5rem;
   background-color: #f0f0f0;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-top: 1rem;
   font-size: 0.75rem;
   color: #666;
@@ -354,7 +361,7 @@ button:disabled {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0 0.75rem;
   cursor: pointer;
   font-size: 0.9rem;
@@ -388,7 +395,7 @@ button:disabled {
   background-color: #c72455;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0 0.75rem;
   cursor: pointer;
   font-size: 0.9rem;
@@ -544,7 +551,7 @@ button:disabled {
   left: 90px;
   top: -40px;
   background-color: #f0f0f0;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 1px solid #ddd;
   padding: 0 0.5rem;
   z-index: 5;
@@ -574,7 +581,7 @@ button:disabled {
   align-items: center;
   padding: 0 0.5rem;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: background-color 0.2s;
   flex: 0 0 auto;
   width: 90px;
@@ -877,11 +884,11 @@ button:disabled {
 }
 
 .view-limit-btn.decrement {
-  border-radius: 8px 0 0 8px;
+  border-radius: 16px 0 0 16px;
 }
 
 .view-limit-btn.increment {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 16px 16px 0;
 }
 
 .view-limit-input-container {
@@ -899,7 +906,7 @@ button:disabled {
   font-weight: bold;
   text-align: center;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 0 8px;
   margin-right: 12px;
   margin-bottom: 0;
@@ -955,7 +962,7 @@ button:disabled {
   transform: translateY(10px);
   width: 85px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -972,6 +979,13 @@ button:disabled {
   margin: 0;
   pointer-events: auto; /* Ensure buttons remain clickable */
   transition: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .post-button:hover {
@@ -995,7 +1009,7 @@ button:disabled {
 .word-counter {
   background-color: #f0f0f0;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0.25rem 0.75rem;
   animation: fadeInSlideUp 0.3s ease forwards;
   pointer-events: none;
@@ -1027,7 +1041,7 @@ button:disabled {
 .file-upload-button {
   width: 110px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -1045,13 +1059,20 @@ button:disabled {
   letter-spacing: normal;
   transform-origin: left center;
   pointer-events: auto; /* Ensure buttons remain clickable */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .file-upload-button.large {
   width: 250px;
   height: 90px;
   font-size: 22px;
-  border-radius: 10px;
+  border-radius: 20px;
   box-shadow: none;
   margin-bottom: 0;
 }
@@ -1079,19 +1100,19 @@ button:disabled {
 
 .file-upload-button.shrink:hover {
   background-color: var(--primary-hover);
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .file-upload-button:hover {
   background-color: var(--primary-hover);
   transform: scale(1.05);
   box-shadow: none;
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .file-upload-button.large:hover {
   transform: scale(1.02);
-  border-radius: 10px;
+  border-radius: 20px;
 }
 
 .file-upload-button.large .upload-text {
@@ -1122,7 +1143,7 @@ button:disabled {
   text-overflow: ellipsis;
   background-color: rgba(255, 255, 255, 0.9);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1179,7 +1200,7 @@ button:disabled {
   background-color: #333;
   color: white;
   padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -1344,7 +1365,7 @@ button:disabled {
   margin-left: 10px;
   padding: 3px 8px;
   font-size: 12px;
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: #eee;
   border: 1px solid #ccc;
   cursor: pointer;
@@ -1375,7 +1396,7 @@ button:disabled {
   background-color: rgba(52, 152, 219, 0.9);
   color: white;
   padding: 5px 12px;
-  border-radius: 5px;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: bold;
   white-space: nowrap;
@@ -1415,7 +1436,7 @@ button:disabled {
   background-color: rgba(52, 152, 219, 0.9);
   color: white;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: bold;
   white-space: nowrap;
@@ -1463,7 +1484,7 @@ button:disabled {
     background-color: #f0f0f0;
     padding: 0.75rem;
     padding-top: 0.5rem;
-    border-radius: 8px;
+    border-radius: 16px;
     margin-bottom: 0.75rem;
     border: 1px solid #ddd;
     display: flex;
@@ -1808,7 +1829,7 @@ button:disabled {
     background-color: #f0f0f0;
     border: 1px solid #ddd;
     padding: 0.25rem 0.75rem;
-    border-radius: 6px;
+    border-radius: 12px;
     margin-top: 1rem;
     margin-left: 0;
     margin-right: 0;
@@ -1890,36 +1911,36 @@ button:disabled {
 }
 
 .url-display {
-    flex: 1;
-    padding: calc(0.6rem - 1px) 1rem;
-    background-color: rgba(128, 128, 128, 0.1);
-    border: 1px solid var(--glass-border);
-    border-radius: 6px;
-    font-family: monospace;
-    font-size: 1.1rem;
-    font-weight: bold;
-    font-style: italic;
-    color: #333;
-    word-break: break-all;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
-    line-height: 1;
+  flex: 1;
+  padding: calc(0.6rem - 1px) 1rem;
+  background-color: rgba(128, 128, 128, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  font-style: italic;
+  color: #333;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .copy-button {
-    padding: 0.75rem 1rem;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    min-width: 60px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  padding: 0.75rem 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 60px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .copy-button:hover {
@@ -1939,17 +1960,17 @@ button:disabled {
 }
 
 .back-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.9rem;
-    width: 100%;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .back-button:hover {
@@ -2007,18 +2028,18 @@ button:disabled {
 }
 
 .download-button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0.75rem 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-    width: 100%;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .download-button:hover {
@@ -2042,18 +2063,18 @@ button:disabled {
 }
 
 .social-button {
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    font-size: 0.9rem;
-    grid-column: span 2;
-    background-color: #666;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 0.9rem;
+  grid-column: span 2;
+  background-color: #666;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .social-button:hover {
@@ -2234,7 +2255,7 @@ button:disabled {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0 0.75rem;
   cursor: pointer;
   font-size: 0.9rem;
@@ -2246,6 +2267,13 @@ button:disabled {
   text-transform: uppercase;
   text-decoration: none;
   margin: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .write-post-button:hover {
@@ -2285,7 +2313,7 @@ button:disabled {
   font-size: 0.8rem;
   font-weight: bold;
   padding: 0.3rem 0;
-  border-radius: 0 0 6px 0; /* Only bottom-right corner rounded */
+  border-radius: 0 0 12px 0; /* Only bottom-right corner rounded */
   margin: 0;
   border: none;
   cursor: pointer;
@@ -2341,6 +2369,11 @@ button:disabled {
   backdrop-filter: blur(5px);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .feed-post:hover {
@@ -2433,7 +2466,7 @@ button:disabled {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 0.75rem 1.5rem;
   cursor: pointer;
   font-size: 0.9rem;

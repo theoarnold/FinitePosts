@@ -177,6 +177,11 @@ textarea {
   position: relative;
   transition: var(--transition-smooth);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  will-change: height, scroll-position;
+  contain: layout style;
 }
 
 textarea::placeholder {

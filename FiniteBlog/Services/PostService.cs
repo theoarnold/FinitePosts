@@ -133,9 +133,9 @@ namespace FiniteBlog.Services
         {
             _logger.LogInformation("Recording new view for post {PostSlug} - no previous views detected", post.Slug);
 
-            string compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
+            var compositeFingerprint = CreateCompositeFingerprint(deviceFingerprint, ipAddress);
             
-            PostViewer? viewer = new PostViewer
+            var viewer = new PostViewer
             {
                 Id = Guid.NewGuid(),
                 PostId = post.Id,

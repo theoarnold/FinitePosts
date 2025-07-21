@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useFeedData } from './FeedDataProvider';
 
 const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
@@ -9,7 +9,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
     const isManualScrollingRef = useRef(false);
 
     // Handle user interaction - pause auto-scroll
-    const handleUserInteraction = () => {
+    const handleUserInteraction = useCallback(() => {
         if (!autoScrollStarted) return;
         
         // Immediately pause auto-scroll
@@ -25,7 +25,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
             // Restart auto-scroll after user stops interacting
             resumeAutoScroll();
         }, 2000); // Give users more time before resuming auto-scroll
-    };
+    }, [autoScrollStarted, pauseAutoScroll, resumeAutoScroll]);
 
     // Add user interaction event listeners to feed element
     useEffect(() => {
@@ -72,7 +72,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
             feedElement.removeEventListener('mousedown', handleMouseDown);
             feedElement.removeEventListener('touchstart', handleTouchStart);
         };
-    }, [feedRef, autoScrollStarted]);
+    }, [feedRef, autoScrollStarted, handleUserInteraction]);
 
     // Global event listeners to catch any user interaction
     useEffect(() => {
@@ -104,7 +104,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
             window.removeEventListener('wheel', globalWheelHandler);
             window.removeEventListener('keydown', globalKeyHandler);
         };
-    }, [feedRef, autoScrollStarted, checkAndFetchMore]);
+    }, [feedRef, autoScrollStarted, checkAndFetchMore, handleUserInteraction]);
 
     // Cleanup timeout on unmount
     useEffect(() => {

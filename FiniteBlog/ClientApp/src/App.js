@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import Manifesto from './components/Manifesto';
 import Home from './components/Home';
 import Write from './components/Write';

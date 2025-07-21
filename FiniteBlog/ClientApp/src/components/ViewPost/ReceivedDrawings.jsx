@@ -1,7 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 
 const ReceivedAnnotations = memo(({ annotations, targetElementRef, showAnnotations = true }) => {
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if device is mobile
@@ -15,22 +14,7 @@ const ReceivedAnnotations = memo(({ annotations, targetElementRef, showAnnotatio
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Update canvas size when target element changes
-  useEffect(() => {
-    if (targetElementRef?.current) {
-      const updateSize = () => {
-        const rect = targetElementRef.current.getBoundingClientRect();
-        setCanvasSize({
-          width: rect.width || 800,
-          height: rect.height || 600
-        });
-      };
 
-      updateSize();
-      window.addEventListener('resize', updateSize);
-      return () => window.removeEventListener('resize', updateSize);
-    }
-  }, [targetElementRef]);
 
   if (!targetElementRef?.current || annotations.length === 0 || !showAnnotations) {
     return null;

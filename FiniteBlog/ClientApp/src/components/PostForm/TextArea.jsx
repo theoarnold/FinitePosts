@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo, startTransition, useMemo } from 'react';
 
 const PostTextArea = memo(({ 
   content, 
@@ -12,17 +12,26 @@ const PostTextArea = memo(({
   const [fileAttached, setFileAttached] = useState(false);
   const [fileName, setFileName] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [lastCursorPosition, setLastCursorPosition] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const scrollTimeoutRef = useRef(null);
+  const scrollDebounceRef = useRef(null);
   
   const textareaRef = useRef(null);
   const buttonRef = useRef(null);
   
-  // Auto-resize textarea based on content
+  // Auto-resize textarea based on content with debouncing
   useEffect(() => {
-    if (textareaRef.current) {
+    if (!textareaRef.current) return;
+    
+    // Clear any existing debounce timeout
+    if (scrollDebounceRef.current) {
+      clearTimeout(scrollDebounceRef.current);
+    }
+    
+    // Debounce the expensive operations to reduce INP
+    scrollDebounceRef.current = setTimeout(() => {
       const textarea = textareaRef.current;
+      if (!textarea) return;
       
       // Store current scroll position before any changes
       const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -65,17 +74,17 @@ const PostTextArea = memo(({
           behavior: 'auto'
         });
       }
-    }
-    
-    // Set typing state based on content
-    setIsTyping(content.length > 0);
+    }, 16); // ~60fps debouncing to reduce INP
   }, [content]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
+      }
+      if (scrollDebounceRef.current) {
+        clearTimeout(scrollDebounceRef.current);
       }
     };
   }, []);
@@ -92,26 +101,27 @@ const PostTextArea = memo(({
 
   const handleContentChange = useCallback((e) => {
     const newValue = e.target.value;
-    const cursorPosition = e.target.selectionStart;
     
-    // Update cursor position state
-    setLastCursorPosition(cursorPosition);
-    
+    // Immediately update the content for responsive typing
     onContentChange(newValue);
+    
+    // Use startTransition for non-urgent state updates
+    startTransition(() => {
+      setIsTyping(newValue.length > 0);
+    });
   }, [onContentChange]);
 
   const handleKeyDown = useCallback((e) => {
-    // Update cursor position on key events
-    setTimeout(() => {
-      if (textareaRef.current) {
-        setLastCursorPosition(textareaRef.current.selectionStart);
-      }
-    }, 0);
-  }, []);
+    // Handle keyboard shortcuts if needed
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      onSubmit();
+    }
+  }, [onSubmit]);
 
   const handleClick = useCallback((e) => {
     // Update cursor position on click
-    setLastCursorPosition(e.target.selectionStart);
+
   }, []);
 
   const handleFileChange = useCallback((e) => {
@@ -157,8 +167,8 @@ const PostTextArea = memo(({
     setMousePosition({ x: 0, y: 0 });
   }, []);
 
-  // Word counting function
-  const getWordCount = useCallback(() => {
+  // Memoized word counting function
+  const getWordCount = useMemo(() => {
     if (!content.trim()) return 0;
     return content.trim().split(/\s+/).length;
   }, [content]);
@@ -177,6 +187,8 @@ const PostTextArea = memo(({
           autoComplete="off"
           autoCorrect="on"
           spellCheck="true"
+          inputMode="text"
+          enterKeyHint="send"
           className={`text-input ${content ? '' : 'empty-textarea'} ${isTyping ? 'typing' : 'not-typing'}`}
         />
 
@@ -222,7 +234,7 @@ const PostTextArea = memo(({
               {isTyping && (
                 <div className="word-counter">
                   <div className="word-counter-content">
-                    {getWordCount()}{getWordCount() < 100 && !isMobile && <span className="word-suffix">&nbsp;word{getWordCount() !== 1 ? 's' : ''}</span>}
+                    {getWordCount}{getWordCount < 100 && !isMobile && <span className="word-suffix">&nbsp;word{getWordCount !== 1 ? 's' : ''}</span>}
                   </div>
                 </div>
               )}

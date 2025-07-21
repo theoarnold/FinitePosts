@@ -9,7 +9,7 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
     const { post, isDeleted } = usePostData();
     const [receivedAnnotations, setReceivedAnnotations] = useState([]);
     const [isAnnotating, setIsAnnotating] = useState(false);
-    const [showAnnotations, setShowAnnotations] = useState(true); // Changed to true by default
+
     const [isShortPost, setIsShortPost] = useState(false);
 
     const annotationCanvasRef = useRef(null);
@@ -133,11 +133,11 @@ const PostAnnotations = ({ slug, postContentRef, cardRef }) => {
                 <ReceivedAnnotations 
                     annotations={receivedAnnotations}
                     targetElementRef={cardRef}
-                    showAnnotations={showAnnotations}
+                    showAnnotations={true}
                 />
                 
                 {/* Text Annotation Canvas for creating new annotations, covers entire card */}
-                {isAnnotating && showAnnotations && (
+                {isAnnotating && (
                     <TextAnnotationCanvas 
                         ref={annotationCanvasRef}
                         isVisible={isAnnotating}

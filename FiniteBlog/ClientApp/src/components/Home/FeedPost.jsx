@@ -42,7 +42,7 @@ const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPo
         onUnregisterPost(post.slug);
       }
     };
-  }, [post.slug]); // Only depend on the slug, not the functions
+  }, [post.slug, onRegisterPost, onUnregisterPost]);
 
   // Check if post has an image attachment
   const hasImageAttachment = post.hasAttachment && 

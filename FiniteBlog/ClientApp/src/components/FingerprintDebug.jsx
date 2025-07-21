@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import fingerprintService from '../services/fingerprint';
 import { getFingerprint } from '@thumbmarkjs/thumbmarkjs';
 
@@ -6,7 +6,6 @@ const FingerprintDebug = () => {
   const [fingerprint, setFingerprint] = useState(null);
   const [fingerprintData, setFingerprintData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [rawData, setRawData] = useState(null);
   const [rawValues, setRawValues] = useState(null);
   const [compositeDemo, setCompositeDemo] = useState(null);
 
@@ -84,7 +83,7 @@ const FingerprintDebug = () => {
     };
   };
 
-  const generateFingerprint = async () => {
+  const generateFingerprint = useCallback(async () => {
     setLoading(true);
     try {
       // Get raw browser values first
@@ -147,17 +146,16 @@ const FingerprintDebug = () => {
       });
       
       setFingerprintData(rawResult?.data);
-      setRawData(rawResult);
       
     } catch (error) {
       setFingerprint({ error: error.message });
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     generateFingerprint();
-  }, []);
+  }, [generateFingerprint]);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace', fontSize: '12px' }}>

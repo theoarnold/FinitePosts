@@ -8,7 +8,6 @@ import FingerprintDebug from './components/FingerprintDebug';
 import fingerprintService from './services/fingerprint';
 
 function App() {
-  const navigate = useNavigate();
 
   // Start fingerprint generation immediately in background
   useEffect(() => {
@@ -22,10 +21,6 @@ function App() {
   const handleManifestoClick = (e) => {
     e.stopPropagation();
     };
-
-  const handleWriteClick = (e) => {
-    e.stopPropagation();
-  };
 
   const handleNavbarClick = (e) => {
     // Don't navigate if clicking on navbar links

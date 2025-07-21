@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useFeedData } from './FeedDataProvider';
 
 const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
@@ -8,37 +8,36 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
     const autoScrollStarted = useRef(false);
     const isUserScrollingRef = useRef(false);
 
-    // Simple auto-scroll functionality
-    const startAutoScroll = () => {
+    const startAutoScroll = useCallback(() => {
         if (!feedRef.current) {
             return;
         }
-        
+
         if (scrollIntervalRef.current) {
             clearInterval(scrollIntervalRef.current);
         }
-        
+
         isUserScrollingRef.current = false;
         autoScrollStarted.current = true;
-        
+
         scrollIntervalRef.current = setInterval(() => {
             if (feedRef.current && !isUserScrollingRef.current) {
                 const feedElement = feedRef.current;
-                
+
                 // Auto-scroll (slightly faster for better visibility)
                 feedElement.scrollTop += 2;
-                
+
                 // Check if we need more posts when approaching the bottom
                 const distanceFromBottom = feedElement.scrollHeight - feedElement.scrollTop - feedElement.clientHeight;
-                
+
                 // Load posts much earlier and more aggressively for fast scrolling
                 checkAndFetchMore(distanceFromBottom);
-                
+
                 // Notify parent about scroll position
                 onScrollNearBottom?.(distanceFromBottom);
             }
         }, 30); // Slightly slower interval for smoother animation
-    };
+    }, [feedRef, checkAndFetchMore, onScrollNearBottom]); // Add dependencies
 
     const stopAutoScroll = () => {
         if (scrollIntervalRef.current) {
@@ -67,7 +66,7 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
                 startAutoScroll();
             }, delay);
         }
-    }, [posts, isRestored]);
+    }, [posts, isRestored, startAutoScroll]);
 
     // Cleanup on unmount
     useEffect(() => {

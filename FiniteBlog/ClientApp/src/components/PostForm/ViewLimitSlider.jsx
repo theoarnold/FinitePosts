@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
+import React, { useRef, useState, useEffect, memo } from 'react';
 
 // Configuration for different view ranges
 const VIEW_RANGES = {

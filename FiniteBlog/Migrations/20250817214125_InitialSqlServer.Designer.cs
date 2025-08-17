@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FiniteBlog.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250609175825_AddFileAttachmentColumns")]
-    partial class AddFileAttachmentColumns
+    [Migration("20250817214125_InitialSqlServer")]
+    partial class InitialSqlServer
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,13 +65,46 @@ namespace FiniteBlog.Migrations
                     b.ToTable("AnonymousPosts");
                 });
 
+            modelBuilder.Entity("FiniteBlog.Models.PostDrawing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByFingerprint")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("PositionX")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PositionY")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostDrawings");
+                });
+
             modelBuilder.Entity("FiniteBlog.Models.PostViewer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("IpAddress")
+                    b.Property<string>("BrowserFingerprint")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -92,6 +125,17 @@ namespace FiniteBlog.Migrations
                     b.ToTable("PostViewers");
                 });
 
+            modelBuilder.Entity("FiniteBlog.Models.PostDrawing", b =>
+                {
+                    b.HasOne("FiniteBlog.Models.AnonymousPost", "Post")
+                        .WithMany("Drawings")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("FiniteBlog.Models.PostViewer", b =>
                 {
                     b.HasOne("FiniteBlog.Models.AnonymousPost", "Post")
@@ -105,6 +149,8 @@ namespace FiniteBlog.Migrations
 
             modelBuilder.Entity("FiniteBlog.Models.AnonymousPost", b =>
                 {
+                    b.Navigation("Drawings");
+
                     b.Navigation("Viewers");
                 });
 #pragma warning restore 612, 618

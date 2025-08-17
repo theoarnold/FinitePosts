@@ -8,14 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        }));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<VisitorCookie>();
 
@@ -35,8 +28,9 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:3000",  // React dev server
-                "http://localhost:5206",// API domain
-                "https://your-production-domain.com"  // Production domain
+                "http://localhost:5206",  // API domain
+                "https://your-static-web-app-url.azurestaticapps.net",  // Your Static Web App URL
+                "https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net"  // Your API domain
             )
             .AllowAnyMethod()
             .AllowAnyHeader()

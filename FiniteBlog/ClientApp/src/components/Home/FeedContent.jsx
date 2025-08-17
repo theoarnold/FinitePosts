@@ -16,17 +16,17 @@ const FeedContent = ({ feedRef, onPostClick }) => {
     // Handle loading, error, and empty states
     if (loading || error || posts.length === 0) {
         return (
-            <FeedState 
-                loading={loading} 
-                error={error} 
-                posts={posts} 
-                onRetry={() => fetchPosts()} 
+            <FeedState
+                loading={loading}
+                error={error}
+                posts={posts}
+                onRetry={() => fetchPosts()}
             />
         );
     }
 
     return (
-        <div 
+        <div
             ref={feedRef}
             className="post-feed"
             tabIndex={0}

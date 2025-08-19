@@ -64,8 +64,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Comment out HTTPS redirection for development
-// app.UseHttpsRedirection();
+// Enable HTTPS redirection in production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 //app.UseSpaStaticFiles();
 app.UseCors("CorsPolicy");

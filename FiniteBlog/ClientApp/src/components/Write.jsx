@@ -4,7 +4,7 @@ import axios from 'axios';
 import PostForm from './PostForm/PostForm';
 
 // API base URL for direct calls
-const API_BASE_URL = 'http://localhost:5206';
+const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net';
 
 const Write = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:3000",  // React dev server
                 "http://localhost:5206",  // API domain
-                "https://your-static-web-app-url.azurestaticapps.net",  // Your Static Web App URL
+                "https://proud-grass-00b972f03.1.azurestaticapps.net",  // Your Static Web App URL
                 "https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net"  // Your API domain
             )
             .AllowAnyMethod()

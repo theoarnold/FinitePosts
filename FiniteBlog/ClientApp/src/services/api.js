@@ -1,9 +1,7 @@
 import axios from 'axios';
 import fingerprintService from './fingerprint';
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? 'http://localhost:5206' 
-  : window.location.origin;
+const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net';
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,

@@ -50,6 +50,12 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
 });
 
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+    options.Secure = CookieSecurePolicy.Always;
+});
+
 // Comment out SPA services
 //builder.Services.AddSpaStaticFiles(configuration =>
 //{
@@ -76,5 +82,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<PostHub>("/posthub");
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();

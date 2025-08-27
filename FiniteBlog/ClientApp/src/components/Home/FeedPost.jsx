@@ -5,21 +5,60 @@ import randomColor from 'randomcolor';
 const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPost }) => {
   const postRef = useRef(null);
   const touchHandled = useRef(false);
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const hasMoved = useRef(false);
 
   const handleClick = useCallback(() => {
     onPostClick(post.slug);
   }, [onPostClick, post.slug]);
 
-  // Optimized touch handler for mobile devices
-  const handleTouchEnd = useCallback((e) => {
-    e.preventDefault(); // Prevent the 300ms click delay
-    touchHandled.current = true;
-    handleClick();
+  // Track touch start position and time
+  const handleTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+    hasMoved.current = false;
+    touchHandled.current = false;
+  }, []);
+
+  // Track if the user is scrolling/moving
+  const handleTouchMove = useCallback((e) => {
+    if (!touchStartRef.current) return;
     
-    // Reset the flag after a short delay
-    setTimeout(() => {
-      touchHandled.current = false;
-    }, 300);
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    
+    // If the user has moved more than 10px in any direction, consider it a scroll/move gesture
+    if (deltaX > 10 || deltaY > 10) {
+      hasMoved.current = true;
+    }
+  }, []);
+
+  // Only trigger navigation if it was a tap (not a scroll)
+  const handleTouchEnd = useCallback((e) => {
+    const touchDuration = Date.now() - touchStartRef.current.time;
+    
+    // Only handle as a tap if:
+    // 1. User hasn't moved significantly (not scrolling)
+    // 2. Touch duration is reasonable for a tap (< 500ms)
+    // 3. Touch hasn't been handled already
+    if (!hasMoved.current && touchDuration < 500 && !touchHandled.current) {
+      e.preventDefault(); // Prevent the 300ms click delay
+      touchHandled.current = true;
+      handleClick();
+      
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        touchHandled.current = false;
+      }, 300);
+    }
+    
+    // Reset tracking
+    hasMoved.current = false;
   }, [handleClick]);
 
   // Only handle click if touch wasn't already handled
@@ -63,6 +102,8 @@ const FeedPost = React.memo(({ post, onPostClick, onRegisterPost, onUnregisterPo
       ref={postRef}
       className={`feed-post ${hasImageAttachment ? 'feed-post-with-image' : ''}`}
       onClick={handleClickOptimized}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
         ...(hasImageAttachment ? {

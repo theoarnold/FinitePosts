@@ -51,8 +51,29 @@ class SignalRService {
             // Could not get device fingerprint for SignalR connection
         }
 
-      const connectionUrl = deviceFingerprint 
-        ? `${API_BASE_URL}/posthub?deviceFingerprint=${encodeURIComponent(deviceFingerprint)}`
+      // Get visitor ID from cookie
+      let visitorId = '';
+      try {
+        const cookies = document.cookie.split(';');
+        const visitorCookie = cookies.find(cookie => cookie.trim().startsWith('visitor_id='));
+        if (visitorCookie) {
+          visitorId = visitorCookie.split('=')[1];
+        }
+      } catch (err) {
+        // Could not get visitor ID from cookie
+      }
+
+      // Build connection URL with parameters
+      const params = new URLSearchParams();
+      if (deviceFingerprint) {
+        params.append('deviceFingerprint', deviceFingerprint);
+      }
+      if (visitorId) {
+        params.append('visitorId', visitorId);
+      }
+      
+      const connectionUrl = params.toString() 
+        ? `${API_BASE_URL}/posthub?${params.toString()}`
         : `${API_BASE_URL}/posthub`;
 
       this.connection = new signalR.HubConnectionBuilder()

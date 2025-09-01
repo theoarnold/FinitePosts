@@ -158,13 +158,14 @@ const ViewPostContent = memo(() => {
     return (
         <div 
             ref={pageRef}
+            className="view-post-container"
             style={{ 
                 position: 'relative', 
                 overflowX: 'hidden',
-                overflowY: 'visible',
-                // Removed minHeight - let it be as tall as content needs
-                paddingTop: '52px',
-                marginTop: '-52px'
+                overflowY: window.innerWidth <= 768 ? 'auto' : 'visible',
+                height: window.innerWidth <= 768 ? 'calc(100vh - 52px)' : 'auto',
+                paddingTop: window.innerWidth <= 768 ? '0' : '52px',
+                marginTop: window.innerWidth <= 768 ? '0' : '-52px'
             }}
             {...bind()}
         >
@@ -196,7 +197,7 @@ const ViewPostContent = memo(() => {
                     transition: isDragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
                     position: 'relative',
                     zIndex: 1,
-                    marginTop: '52px'
+                    marginTop: window.innerWidth <= 768 ? '1rem' : '52px'
                 }}
             >
                 <PostHeader activeViewers={activeViewers} />

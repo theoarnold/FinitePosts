@@ -20,15 +20,25 @@ namespace FiniteBlog.Hubs
         {
             string connectionId = Context.ConnectionId;
             
-            // Get the current cookie or connection header to identify this user
-            string userId = Context.GetHttpContext().Request.Cookies["visitor_id"] ?? "";
+            // Get the current cookie, query parameter, or connection header to identify this user
+            string userId = Context.GetHttpContext()?.Request.Cookies["visitor_id"] ?? 
+                           Context.GetHttpContext()?.Request.Query["visitorId"].FirstOrDefault() ??
+                           Context.GetHttpContext()?.Request.Headers["X-Visitor-Id"].FirstOrDefault() ?? 
+                           "";
+            
+            // If still empty, use connectionId as fallback (not ideal but ensures viewer counting works)
+            if (string.IsNullOrEmpty(userId))
+            {
+                userId = connectionId;
+                _logger.LogWarning($"No visitor ID found for connection {connectionId}, using connection ID as fallback");
+            }
             
             await Groups.AddToGroupAsync(connectionId, slug);
             
             // Only track for real-time active viewers, don't affect persistent view count
             _connectionManager.AddConnection(connectionId, slug, userId);
             
-            _logger.LogInformation($"Client {connectionId} successfully joined group for post {slug}");
+            _logger.LogInformation($"Client {connectionId} successfully joined group for post {slug} with userId {userId}");
         }
 
         public async Task JoinPostGroupForFeed(string slug)
@@ -66,8 +76,8 @@ namespace FiniteBlog.Hubs
             try
             {
                 // Get device fingerprint from query parameters or headers
-                string deviceFingerprint = Context.GetHttpContext().Request.Query["deviceFingerprint"].FirstOrDefault() ?? 
-                                          Context.GetHttpContext().Request.Headers["X-Device-Fingerprint"].FirstOrDefault() ?? 
+                string deviceFingerprint = Context.GetHttpContext()?.Request.Query["deviceFingerprint"].FirstOrDefault() ?? 
+                                          Context.GetHttpContext()?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault() ?? 
                                           Context.ConnectionId; // Fallback to connection ID
 
                 // Save the text annotation to database

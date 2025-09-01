@@ -46,36 +46,58 @@ const PostTextArea = memo(({
       const realCursorPosition = textarea.selectionStart;
       const isActuallyAtEnd = realCursorPosition === content.length && content.length > 0;
       
-      // ONLY scroll if user is definitively typing at the absolute end
-      if (isActuallyAtEnd) {
-        // Immediate scroll to bottom to maintain 100% position during typing
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: 'auto' // Instant scroll during typing
-        });
-        
-        // Clear any existing scroll timeout
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
+      // Mobile-specific handling
+      if (isMobile) {
+        // On mobile, only scroll when typing at the end and keyboard is likely visible
+        if (isActuallyAtEnd && content.length > 50) { // Only for longer texts
+          // Clear any existing scroll timeout
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+          }
+          
+          // Single smooth scroll with longer delay to avoid conflicts with mobile keyboard
+          scrollTimeoutRef.current = setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'end',
+                inline: 'nearest'
+              });
+            }
+          }, 300);
         }
-        
-        // Debounced smooth scroll for final positioning
-        scrollTimeoutRef.current = setTimeout(() => {
+      } else {
+        // Desktop behavior (original logic)
+        if (isActuallyAtEnd) {
+          // Immediate scroll to bottom to maintain 100% position during typing
           window.scrollTo({
             top: document.documentElement.scrollHeight,
-            behavior: 'smooth'
+            behavior: 'auto' // Instant scroll during typing
           });
-        }, 150);
-      } else {
-        // When not at the end, restore the original scroll position
-        // to prevent browser from auto-scrolling to cursor
-        window.scrollTo({
-          top: currentScrollTop,
-          behavior: 'auto'
-        });
+          
+          // Clear any existing scroll timeout
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+          }
+          
+          // Debounced smooth scroll for final positioning
+          scrollTimeoutRef.current = setTimeout(() => {
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: 'smooth'
+            });
+          }, 150);
+        } else {
+          // When not at the end, restore the original scroll position
+          // to prevent browser from auto-scrolling to cursor
+          window.scrollTo({
+            top: currentScrollTop,
+            behavior: 'auto'
+          });
+        }
       }
     }, 16); // ~60fps debouncing to reduce INP
-  }, [content]);
+  }, [content, isMobile]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -89,15 +111,36 @@ const PostTextArea = memo(({
     };
   }, []);
 
-  // Mobile detection
+  // Mobile detection and viewport handling
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
     
+    // Handle mobile keyboard show/hide events
+    const handleViewportChange = () => {
+      if (isMobile && textareaRef.current) {
+        // Clear any pending scroll operations when viewport changes
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        if (scrollDebounceRef.current) {
+          clearTimeout(scrollDebounceRef.current);
+        }
+      }
+    };
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    window.addEventListener('resize', handleViewportChange);
+    // iOS Safari fires orientationchange when keyboard shows/hides
+    window.addEventListener('orientationchange', handleViewportChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('orientationchange', handleViewportChange);
+    };
+  }, [isMobile]);
 
   const handleContentChange = useCallback((e) => {
     const newValue = e.target.value;
@@ -121,8 +164,16 @@ const PostTextArea = memo(({
 
   const handleClick = useCallback((e) => {
     // Update cursor position on click
-
-  }, []);
+    if (isMobile) {
+      // Clear any pending scroll operations on mobile when user taps
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (scrollDebounceRef.current) {
+        clearTimeout(scrollDebounceRef.current);
+      }
+    }
+  }, [isMobile]);
 
   const handleFileChange = useCallback((e) => {
     if (e.target.files && e.target.files[0]) {

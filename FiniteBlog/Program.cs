@@ -47,13 +47,9 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.CheckConsentNeeded = context => false;
-    options.MinimumSameSitePolicy = SameSiteMode.Lax;
-});
-
-builder.Services.Configure<CookiePolicyOptions>(options =>
-{
-    options.MinimumSameSitePolicy = SameSiteMode.None;
-    options.Secure = CookieSecurePolicy.Always;
+    // Use SameSiteMode.None for cross-origin scenarios in production
+    options.MinimumSameSitePolicy = builder.Environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None;
+    options.Secure = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 });
 
 // Comment out SPA services
@@ -77,6 +73,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 //app.UseSpaStaticFiles();
+app.UseCookiePolicy();
 app.UseCors("CorsPolicy");
 app.UseAuthorization();
 

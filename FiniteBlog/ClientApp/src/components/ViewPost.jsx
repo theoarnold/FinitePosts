@@ -162,10 +162,11 @@ const ViewPostContent = memo(() => {
             style={{ 
                 position: 'relative', 
                 overflowX: 'hidden',
-                overflowY: window.innerWidth <= 768 ? 'auto' : 'visible',
-                height: window.innerWidth <= 768 ? 'calc(100vh - 52px)' : 'auto',
-                paddingTop: window.innerWidth <= 768 ? '0' : '52px',
-                marginTop: window.innerWidth <= 768 ? '0' : '-52px'
+                overflowY: 'hidden', // No page-level scrolling
+                height: window.innerWidth <= 768 ? '100vh' : 'auto',
+                paddingTop: window.innerWidth <= 768 ? '52px' : '52px',
+                marginTop: window.innerWidth <= 768 ? '0' : '-52px',
+                boxSizing: 'border-box'
             }}
             {...bind()}
         >
@@ -197,7 +198,12 @@ const ViewPostContent = memo(() => {
                     transition: isDragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
                     position: 'relative',
                     zIndex: 1,
-                    marginTop: window.innerWidth <= 768 ? '1rem' : '52px'
+                    marginTop: window.innerWidth <= 768 ? '1rem' : '52px',
+                    // Make the card scrollable on mobile
+                    height: window.innerWidth <= 768 ? 'calc(100vh - 52px - 2rem)' : 'auto',
+                    overflowY: window.innerWidth <= 768 ? 'auto' : 'visible',
+                    display: 'flex',
+                    flexDirection: 'column'
                 }}
             >
                 <PostHeader activeViewers={activeViewers} />

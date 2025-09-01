@@ -55,11 +55,19 @@ body {
   box-sizing: border-box;
 }
 
-/* Prevent double scrollbar on mobile for ViewPost pages */
+/* Fix double scrollbar issue on mobile ViewPost pages */
 @media (max-width: 768px) {
+  /* Prevent page-level scrolling on ViewPost pages */
   body:has(.view-post-container) {
     height: 100vh;
     overflow: hidden;
+  }
+  
+  /* Make the main container fill viewport and prevent its overflow */
+  .container:has(.view-post-container) {
+    height: 100vh;
+    overflow: hidden;
+    padding: 0;
   }
   
   /* Improve mobile text input behavior */
@@ -1635,6 +1643,17 @@ button:disabled {
     position: relative;
 }
 
+/* Mobile post card scrolling */
+@media (max-width: 768px) {
+  .post-card {
+    /* Override min-height on mobile to allow proper scrolling */
+    min-height: 0;
+    /* Enable smooth scrolling within the card */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
 /* Stats counter at the top */
 .personal-viewer-counter {
     margin-bottom: 1.5rem;
@@ -1682,6 +1701,8 @@ button:disabled {
   position: relative;
   z-index: 10;
   text-shadow: 2px 2px 4px rgba(255, 249, 230, 1), 1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 3px rgba(255, 249, 230, 1), 0px 0px 6px rgba(255, 249, 230, 1), 3px 3px 6px rgba(255, 249, 230, 1), -1px -1px 2px rgba(255, 249, 230, 1), -2px -2px 4px rgba(255, 249, 230, 1), 1px -1px 2px rgba(255, 249, 230, 1), -1px 1px 2px rgba(255, 249, 230, 1), 0px 0px 8px rgba(255, 249, 230, 1);
+  /* On mobile, allow content to fill available space and be scrollable within card */
+  min-height: 0; /* Allow flex item to shrink below content size */
 }
 
 /* Add top margin for home button on desktop only */

@@ -2361,8 +2361,8 @@ button:disabled {
   background-color: rgba(248, 240, 215, 0.75);
   border: 1px solid rgba(221, 221, 221, 0.5);
   border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  margin-bottom: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(5px);
@@ -2522,8 +2522,8 @@ button:disabled {
   }
   
   .feed-post {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
+    padding: 1.1rem;
+    margin-bottom: 0.5rem;
   }
   
   .feed-post-header {
@@ -2564,10 +2564,56 @@ button:disabled {
     font-size: 1rem;
   }
   
-  /* Ensure all feed posts have no minimum height on mobile */
+  /* Ensure all feed posts have consistent sizing on mobile */
   .feed-post,
   .feed-post.card {
     min-height: 0 !important;
+    /* Fix Chrome mobile height issues */
+    line-height: 1.4;
+    box-sizing: border-box;
+  }
+  
+  /* Make sure image posts have identical sizing to regular posts */
+  .feed-post-with-image {
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    /* Force same height behavior as regular posts */
+    height: auto !important;
+    /* Inherit all the same layout properties */
+    padding: 1.1rem !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Chrome mobile specific fixes */
+  .feed-post-preview {
+    line-height: 1.5 !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .feed-post-header {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .feed-post-footer {
+    margin-top: 0.75rem !important;
+  }
+  
+  /* Add bottom spacing for mobile scrolling comfort */
+  .feed-post {
+    margin-bottom: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  /* Add bottom spacing to individual post cards on mobile */
+  .post-card {
+    margin-bottom: 3rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+  
+  /* Add bottom spacing to the feed container */
+  .post-feed {
+    padding-bottom: 3rem !important;
   }
 }
 
@@ -2575,6 +2621,10 @@ button:disabled {
 .feed-post-with-image {
   position: relative;
   color: white !important;
+  /* Ensure same height as regular posts on all devices */
+  height: auto !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .feed-post-blur-overlay {
@@ -2584,8 +2634,8 @@ button:disabled {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 8px;
   z-index: 1;
 }
@@ -2616,26 +2666,53 @@ button:disabled {
   
   .inverted-text,
   .feed-post-with-image .feed-post-header,
-  .feed-post-with-image .feed-post-preview,
   .feed-post-with-image .feed-post-footer {
-    color: white !important;
-    text-shadow: 
-      2px 2px 6px rgba(0, 0, 0, 1),
-      1px 1px 3px rgba(0, 0, 0, 0.9),
-      0px 0px 4px rgba(0, 0, 0, 0.8),
-      3px 3px 8px rgba(0, 0, 0, 0.7);
-    font-weight: 600 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)) !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    position: relative;
+    z-index: 4 !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* Exact same layout as regular posts - only background color changes */
+  .feed-post-with-image .feed-post-preview {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5)) !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    position: relative;
+    z-index: 4 !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    /* Maintain exact same layout properties as regular posts - NO EXTRA PADDING */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+    line-height: 1.5 !important;
+    font-size: 1rem !important;
+    font-weight: normal !important;
+    margin-bottom: 1rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
   }
   
   .feed-post-blur-overlay {
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   
   /* Ensure progress bar is visible on mobile */
   .feed-post-with-image .progress-bar {
-    background-color: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
 }

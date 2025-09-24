@@ -58,6 +58,11 @@ body {
 /* Prevent double scrollbar on mobile for ViewPost pages */
 @media (max-width: 768px) {
   body:has(.view-post-container) {
+    height: auto; /* Allow document to define height */
+    overflow: auto; /* Let the window scroll */
+  }
+  /* Keep only the feed scrollable on mobile */
+  body:has(.feed-container) {
     height: 100vh;
     overflow: hidden;
   }
@@ -76,6 +81,15 @@ body {
   .textarea-container {
     /* Contain scroll behavior to prevent conflicts */
     overscroll-behavior: contain;
+  }
+}
+
+/* Mobile scroll container for single post view */
+@media (max-width: 768px) {
+  .view-post-container {
+    overflow-x: hidden;
+    overflow-y: visible; /* Do not create inner scroll; use window */
+    height: auto; /* Let content define height */
   }
 }
 

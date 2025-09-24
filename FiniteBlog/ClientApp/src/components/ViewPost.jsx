@@ -159,14 +159,7 @@ const ViewPostContent = memo(() => {
         <div 
             ref={pageRef}
             className="view-post-container"
-            style={{ 
-                position: 'relative', 
-                overflowX: 'hidden',
-                overflowY: window.innerWidth <= 768 ? 'auto' : 'visible',
-                height: window.innerWidth <= 768 ? 'calc(100vh - 52px)' : 'auto',
-                paddingTop: window.innerWidth <= 768 ? '0' : '52px',
-                marginTop: window.innerWidth <= 768 ? '0' : '-52px'
-            }}
+            style={{ position: 'relative' }}
             {...bind()}
         >
             {/* Left arrow indicator */}

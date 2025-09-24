@@ -52,7 +52,7 @@ namespace FiniteBlog.Services
                 BlobClient blobClient = _containerClient.GetBlobClient(fileName);
 
                 // Upload with metadata
-                var blobHttpHeaders = new BlobHttpHeaders
+                BlobHttpHeaders blobHttpHeaders = new BlobHttpHeaders
                 {
                     ContentType = file.ContentType,
                     CacheControl = "public, max-age=31536000" // 1 year cache

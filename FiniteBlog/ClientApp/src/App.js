@@ -4,7 +4,6 @@ import Manifesto from './components/Manifesto';
 import Home from './components/Home';
 import Write from './components/Write';
 import ViewPost from './components/ViewPost';
-import FingerprintDebug from './components/FingerprintDebug';
 import fingerprintService from './services/fingerprint';
 
 function App() {
@@ -50,7 +49,6 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/write" element={<Write />} />
           <Route path="/manifesto" element={<Manifesto />} />
-          <Route path="/debug-fingerprint" element={<FingerprintDebug />} />
           <Route path="/:slug" element={<ViewPost />} />
         </Routes>
       </div>

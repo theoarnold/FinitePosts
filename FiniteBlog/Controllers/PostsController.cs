@@ -116,7 +116,7 @@ namespace FiniteBlog.Controllers
         private string? GetClientIpAddress()
         {
             // Try to get the real client IP address, accounting for proxies and load balancers
-            string ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            string? ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             
             if (!string.IsNullOrEmpty(ipAddress))
             {
@@ -132,12 +132,6 @@ namespace FiniteBlog.Controllers
             if (string.IsNullOrEmpty(ipAddress))
             {
                 ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            }
-            
-            // Remove IPv6 localhost mapping
-            if (ipAddress == "::1")
-            {
-                ipAddress = "127.0.0.1";
             }
             
             return ipAddress;
@@ -159,15 +153,16 @@ namespace FiniteBlog.Controllers
         [RequestSizeLimit(10 * 1024 * 1024)] // 10MB limit
         public async Task<ActionResult<object>> CreatePost()
         {
-            CreatePostDto postDto;
+            CreatePostDto? postDto;
             
             // Check if request is multipart (has file) or JSON (text only)
             if (Request.ContentType?.StartsWith("multipart/form-data") == true)
             {
                 // Handle multipart form data (with potential file upload)
-                var content = Request.Form["content"].ToString();
-                var viewLimitStr = Request.Form["viewLimit"].ToString();
-                var file = Request.Form.Files.GetFile("file");
+                string? content = Request.Form["content"].ToString();
+                string? viewLimitStr = Request.Form["viewLimit"].ToString();
+                string? captchaToken = Request.Form["captchaToken"].ToString();
+                IFormFile? file = Request.Form.Files.GetFile("file");
                 
                 // Debug logging
                 _logger.LogInformation("Multipart request received. Content: '{Content}', ViewLimit: '{ViewLimit}', File count: {FileCount}", 
@@ -191,7 +186,8 @@ namespace FiniteBlog.Controllers
                 {
                     Content = content,
                     ViewLimit = viewLimit,
-                    File = file
+                    File = file,
+                    CaptchaToken = string.IsNullOrWhiteSpace(captchaToken) ? null : captchaToken
                 };
             }
             else
@@ -212,6 +208,19 @@ namespace FiniteBlog.Controllers
                 }
             }
             
+            // Verify reCAPTCHA token (server-side)
+            if (string.IsNullOrWhiteSpace(postDto.CaptchaToken))
+            {
+                return BadRequest("Captcha verification failed: missing token.");
+            }
+
+            var remote = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            var captchaValid = await FiniteBlog.Services.GoogleRecaptchaVerifier.VerifyAsync(postDto.CaptchaToken, remote, HttpContext.RequestServices.GetRequiredService<IConfiguration>(), _logger);
+            if (!captchaValid)
+            {
+                return BadRequest("Captcha verification failed.");
+            }
+
             var (post, errorMessage) = await _postService.CreatePostAsync(postDto);
             
             if (errorMessage != null)

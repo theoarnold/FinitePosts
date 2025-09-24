@@ -32,69 +32,48 @@ const PostTextArea = memo(({
     scrollDebounceRef.current = setTimeout(() => {
       const textarea = textareaRef.current;
       if (!textarea) return;
-      
-      // Store current scroll position before any changes
-      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
+
       // Reset height to get the correct scrollHeight
       textarea.style.height = 'auto';
-      // Set the height to scrollHeight to expand the textarea
       const newHeight = Math.max(200, textarea.scrollHeight);
       textarea.style.height = `${newHeight}px`;
-      
-      // Get real-time cursor position and check if truly at the end
+
+      // Check if caret is truly at the end
       const realCursorPosition = textarea.selectionStart;
       const isActuallyAtEnd = realCursorPosition === content.length && content.length > 0;
-      
-      // Mobile-specific handling
+
+      if (!isActuallyAtEnd) {
+        // Do not force scroll when not at end (prevents jump back to top)
+        return;
+      }
+
+      // Pin scroll to bottom after layout has applied
+      const doScrollToBottom = () => {
+        const scrollingElement = document.scrollingElement || document.documentElement;
+        if (!scrollingElement) return;
+        scrollingElement.scrollTo({
+          top: scrollingElement.scrollHeight,
+          behavior: 'auto'
+        });
+      };
+
+      // Clear any existing scroll timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Use rAF to wait for layout, then scroll; do twice for stability
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          doScrollToBottom();
+        });
+      });
+
+      // On mobile, keyboard animations can shift viewport; follow up with a delayed correction
       if (isMobile) {
-        // On mobile, only scroll when typing at the end and keyboard is likely visible
-        if (isActuallyAtEnd && content.length > 50) { // Only for longer texts
-          // Clear any existing scroll timeout
-          if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current);
-          }
-          
-          // Single smooth scroll with longer delay to avoid conflicts with mobile keyboard
-          scrollTimeoutRef.current = setTimeout(() => {
-            if (textareaRef.current) {
-              textareaRef.current.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'end',
-                inline: 'nearest'
-              });
-            }
-          }, 300);
-        }
-      } else {
-        // Desktop behavior (original logic)
-        if (isActuallyAtEnd) {
-          // Immediate scroll to bottom to maintain 100% position during typing
-          window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'auto' // Instant scroll during typing
-          });
-          
-          // Clear any existing scroll timeout
-          if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current);
-          }
-          
-          // Debounced smooth scroll for final positioning
-          scrollTimeoutRef.current = setTimeout(() => {
-            window.scrollTo({
-              top: document.documentElement.scrollHeight,
-              behavior: 'smooth'
-            });
-          }, 150);
-        } else {
-          // When not at the end, restore the original scroll position
-          // to prevent browser from auto-scrolling to cursor
-          window.scrollTo({
-            top: currentScrollTop,
-            behavior: 'auto'
-          });
-        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          doScrollToBottom();
+        }, 250);
       }
     }, 16); // ~60fps debouncing to reduce INP
   }, [content, isMobile]);

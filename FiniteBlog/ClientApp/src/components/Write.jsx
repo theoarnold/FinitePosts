@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PostForm from './PostForm/PostForm';
+import RecaptchaModal from '../components/common/RecaptchaModal';
 
 // API base URL for direct calls
 const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net';
@@ -9,6 +10,8 @@ const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsite
 const Write = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [pendingPostData, setPendingPostData] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (postData, validationError) => {
@@ -22,20 +25,34 @@ const Write = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    // Trigger captcha flow first
     setError('');
+    setPendingPostData(postData);
+    setShowCaptcha(true);
+  };
+
+  const handleCaptchaCancel = () => {
+    setShowCaptcha(false);
+    setPendingPostData(null);
+  };
+
+  const handleCaptchaVerified = async (captchaToken) => {
+    if (!pendingPostData) return;
+    setShowCaptcha(false);
+    setIsSubmitting(true);
 
     try {
       // Create form data if there's a file
       let requestData;
       let headers = { 'Content-Type': 'application/json' };
       
-      if (postData.file) {
+      if (pendingPostData.file) {
         // Use FormData to handle file upload
         const formData = new FormData();
-        formData.append('content', postData.content);
-        formData.append('viewLimit', postData.viewLimit);
-        formData.append('file', postData.file);
+        formData.append('content', pendingPostData.content);
+        formData.append('viewLimit', pendingPostData.viewLimit);
+        formData.append('file', pendingPostData.file);
+        formData.append('captchaToken', captchaToken);
         
         requestData = formData;
         // Let axios set the correct content type with boundary
@@ -43,8 +60,9 @@ const Write = () => {
       } else {
         // Regular JSON submission without file
         requestData = {
-          content: postData.content,
-          viewLimit: postData.viewLimit
+          content: pendingPostData.content,
+          viewLimit: pendingPostData.viewLimit,
+          captchaToken
         };
       }
       
@@ -70,14 +88,23 @@ const Write = () => {
       }
       setIsSubmitting(false);
     }
+    setPendingPostData(null);
   };
 
   return (
-    <PostForm 
-      onSubmit={handleSubmit}
-      isSubmitting={isSubmitting}
-      error={error}
-    />
+    <>
+      <PostForm 
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        error={error}
+      />
+      <RecaptchaModal 
+        isVisible={showCaptcha}
+        onClose={handleCaptchaCancel}
+        onVerified={handleCaptchaVerified}
+        siteKey={"6Le5-NErAAAAADDoM6TL3hKn6kWABYaID2g50286"}
+      />
+    </>
   );
 };
 

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -21,10 +20,12 @@ namespace FiniteBlog.Services
 
         public static async Task<bool> VerifyAsync(string token, string? remoteIp, IConfiguration configuration, ILogger logger)
         {
-            var secret =
-                configuration["GoogleRecaptcha:SecretKey"]
-                ?? configuration["recapSecret"]
-                ?? Environment.GetEnvironmentVariable("recapSecret");
+            var secret = configuration["GoogleRecaptcha:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                // Hardcoded fallback (temporary)
+                secret = "6Le5-NErAAAAAJtZInNzO2jsU2oa5k3Yw27ttXRu";
+            }
             if (string.IsNullOrWhiteSpace(secret))
             {
                 logger.LogWarning("reCAPTCHA secret key is not configured.");

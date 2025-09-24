@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import ReCAPTCHA from 'react-google-recaptcha';
 
@@ -12,6 +12,14 @@ const RecaptchaModal = ({ isVisible, onClose, onVerified, siteKey, theme = 'ligh
   const [isClosing, setIsClosing] = useState(false);
   const recaptchaRef = useRef(null);
 
+  const handleCancel = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 200);
+  }, [onClose]);
+
   useEffect(() => {
     if (!isVisible) return;
     const onEsc = (e) => {
@@ -21,20 +29,12 @@ const RecaptchaModal = ({ isVisible, onClose, onVerified, siteKey, theme = 'ligh
     };
     document.addEventListener('keydown', onEsc);
     return () => document.removeEventListener('keydown', onEsc);
-  }, [isVisible]);
+  }, [isVisible, handleCancel]);
 
   if (!isVisible && !isClosing) return null;
 
   const handleBackdrop = () => {
     handleCancel();
-  };
-
-  const handleCancel = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsClosing(false);
-      onClose();
-    }, 200);
   };
 
   const handleChange = (token) => {

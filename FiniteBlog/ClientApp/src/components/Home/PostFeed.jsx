@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import FeedDataProvider from './FeedDataProvider';
 import FeedAutoScroll from './FeedAutoScroll';
 import FeedUserInteraction from './FeedUserInteraction';
@@ -8,6 +8,14 @@ import FeedContent from './FeedContent';
 
 const PostFeedContent = () => {
     const feedRef = useRef(null);
+
+    // Lock body scroll while feed is visible
+    useEffect(() => {
+        document.body.classList.add('feed-scroll-locked');
+        return () => {
+            document.body.classList.remove('feed-scroll-locked');
+        };
+    }, []);
 
     // Set up state persistence
     const { saveFeedState, clearSavedState } = FeedStatePersistence({ feedRef });

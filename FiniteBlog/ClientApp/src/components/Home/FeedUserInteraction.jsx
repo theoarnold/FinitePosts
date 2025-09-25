@@ -3,29 +3,30 @@ import { useFeedData } from './FeedDataProvider';
 
 const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
     const { checkAndFetchMore } = useFeedData();
-    const { pauseAutoScroll, resumeAutoScroll, autoScrollStarted } = autoScrollControls;
+    const { pauseAutoScroll, resumeAutoScroll, autoScrollStarted, isProgrammaticScrollRef, cancelScheduledStart, scheduleStartAfter } = autoScrollControls;
     
     const scrollTimeoutRef = useRef(null);
     const isManualScrollingRef = useRef(false);
 
     // Handle user interaction - pause auto-scroll
     const handleUserInteraction = useCallback(() => {
-        if (!autoScrollStarted) return;
-        
+        // Cancel any pending auto-start so user interaction always wins
+        cancelScheduledStart?.();
+
         // Immediately pause auto-scroll
         pauseAutoScroll();
         isManualScrollingRef.current = true;
-        
+
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
         }
-        
+
+        // Restart after 3s of no interaction
         scrollTimeoutRef.current = setTimeout(() => {
             isManualScrollingRef.current = false;
-            // Restart auto-scroll after user stops interacting
             resumeAutoScroll();
-        }, 2000); // Give users more time before resuming auto-scroll
-    }, [autoScrollStarted, pauseAutoScroll, resumeAutoScroll]);
+        }, 3000);
+    }, [pauseAutoScroll, resumeAutoScroll, cancelScheduledStart]);
 
     // Add user interaction event listeners to feed element
     useEffect(() => {
@@ -46,6 +47,12 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
         const handleWheel = (e) => {
             handleUserInteraction();
         };
+        const handleScroll = () => {
+            // Ignore our own programmatic scrolls; pause immediately on user-driven scrolls
+            if (!isProgrammaticScrollRef || !isProgrammaticScrollRef.current) {
+                handleUserInteraction();
+            }
+        };
         
         const handleTouchMove = () => {
             handleUserInteraction();
@@ -59,14 +66,16 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
         };
         
         // Add event listeners with appropriate options
-        feedElement.addEventListener('wheel', handleWheel, { passive: false });
-        feedElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+        feedElement.addEventListener('wheel', handleWheel, { passive: true });
+        feedElement.addEventListener('scroll', handleScroll, { passive: true });
+        feedElement.addEventListener('touchmove', handleTouchMove, { passive: true });
         feedElement.addEventListener('keydown', handleKeyDown);
         feedElement.addEventListener('mousedown', handleMouseDown);
         feedElement.addEventListener('touchstart', handleTouchStart);
         
         return () => {
             feedElement.removeEventListener('wheel', handleWheel);
+            feedElement.removeEventListener('scroll', handleScroll);
             feedElement.removeEventListener('touchmove', handleTouchMove);
             feedElement.removeEventListener('keydown', handleKeyDown);
             feedElement.removeEventListener('mousedown', handleMouseDown);
@@ -97,7 +106,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
             }
         };
 
-        window.addEventListener('wheel', globalWheelHandler, { passive: false });
+        window.addEventListener('wheel', globalWheelHandler, { passive: true });
         window.addEventListener('keydown', globalKeyHandler);
 
         return () => {

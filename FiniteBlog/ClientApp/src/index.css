@@ -55,6 +55,12 @@ body {
   box-sizing: border-box;
 }
 
+/* Prevent window scrolling when feed is mounted */
+.feed-scroll-locked {
+  overflow: hidden;
+  height: 100vh;
+}
+
 /* Prevent double scrollbar on mobile for ViewPost pages */
 @media (max-width: 768px) {
   body:has(.view-post-container) {
@@ -2354,12 +2360,16 @@ button:disabled {
 .post-feed {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background-color: var(--card-bg);
   border-radius: 12px 12px 0 0;
   border: 1px solid var(--border-color);
   border-bottom: none;
   padding: 0.1rem 0.5rem 1rem 0.5rem;
   position: relative;
+  /* Contain scroll to this element on mobile */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   
   /* Hide scrollbar for Chrome, Safari and Opera */
   scrollbar-width: none; /* Firefox */
@@ -2681,16 +2691,12 @@ button:disabled {
   .inverted-text,
   .feed-post-with-image .feed-post-header,
   .feed-post-with-image .feed-post-footer {
-    color: #ffffff !important;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)) !important;
-    padding: 0 8px !important;
-    border-radius: 6px !important;
+    /* Remove dark background and padding for a consistent progress bar width */
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
     position: relative;
     z-index: 4 !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
   }
   
   /* Exact same layout as regular posts - only background color changes */
@@ -2724,9 +2730,11 @@ button:disabled {
     -webkit-backdrop-filter: blur(6px);
   }
   
-  /* Ensure progress bar is visible on mobile */
+  /* Ensure progress bar matches regular posts on mobile */
   .feed-post-with-image .progress-bar {
-    background-color: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    background-color: rgba(221, 221, 221, 0.5) !important; /* same as .progress-bar */
+    border: none !important; /* remove white outline */
+    width: 100% !important; /* ensure full width */
+    margin: 0 !important;
   }
 }

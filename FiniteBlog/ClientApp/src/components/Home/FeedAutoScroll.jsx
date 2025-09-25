@@ -5,8 +5,13 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
     const { posts, isRestored, checkAndFetchMore } = useFeedData();
     
     const scrollIntervalRef = useRef(null);
+    const rafIdRef = useRef(null);
+    const lastTimestampRef = useRef(null);
+    const pixelsPerSecondRef = useRef(134);
+    const isProgrammaticScrollRef = useRef(false);
     const autoScrollStarted = useRef(false);
     const isUserScrollingRef = useRef(false);
+    const startDelayTimeoutRef = useRef(null);
 
     const startAutoScroll = useCallback(() => {
         if (!feedRef.current) {
@@ -20,29 +25,44 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
         isUserScrollingRef.current = false;
         autoScrollStarted.current = true;
 
-        scrollIntervalRef.current = setInterval(() => {
-            if (feedRef.current && !isUserScrollingRef.current) {
-                const feedElement = feedRef.current;
+        const step = (timestamp) => {
+            const feedElement = feedRef.current;
+            if (feedElement && !isUserScrollingRef.current) {
+                if (lastTimestampRef.current !== null) {
+                    const deltaMs = timestamp - lastTimestampRef.current;
+                    const clampedDeltaMs = Math.min(deltaMs, 50);
+                    const deltaPx = (pixelsPerSecondRef.current * clampedDeltaMs) / 1000;
+                    const maxScrollTop = feedElement.scrollHeight - feedElement.clientHeight;
+                    isProgrammaticScrollRef.current = true;
+                    feedElement.scrollTop = Math.min(feedElement.scrollTop + deltaPx, maxScrollTop);
 
-                // Auto-scroll (slightly faster for better visibility)
-                feedElement.scrollTop += 2;
-
-                // Check if we need more posts when approaching the bottom
-                const distanceFromBottom = feedElement.scrollHeight - feedElement.scrollTop - feedElement.clientHeight;
-
-                // Load posts much earlier and more aggressively for fast scrolling
-                checkAndFetchMore(distanceFromBottom);
-
-                // Notify parent about scroll position
-                onScrollNearBottom?.(distanceFromBottom);
+                    const distanceFromBottom = feedElement.scrollHeight - feedElement.scrollTop - feedElement.clientHeight;
+                    checkAndFetchMore(distanceFromBottom);
+                    onScrollNearBottom?.(distanceFromBottom);
+                    // Reset the programmatic flag on the next frame so user scrolls are prioritized
+                    window.requestAnimationFrame(() => { isProgrammaticScrollRef.current = false; });
+                }
             }
-        }, 30); // Slightly slower interval for smoother animation
+            lastTimestampRef.current = timestamp;
+            rafIdRef.current = window.requestAnimationFrame(step);
+        };
+
+        if (rafIdRef.current) {
+            window.cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
+        }
+        lastTimestampRef.current = null;
+        rafIdRef.current = window.requestAnimationFrame(step);
     }, [feedRef, checkAndFetchMore, onScrollNearBottom]); // Add dependencies
 
     const stopAutoScroll = () => {
         if (scrollIntervalRef.current) {
             clearInterval(scrollIntervalRef.current);
             scrollIntervalRef.current = null;
+        }
+        if (rafIdRef.current) {
+            window.cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
         }
     };
 
@@ -62,7 +82,11 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
         if (posts.length > 0) {
             // If restored from saved state, delay auto-scroll longer to let user see familiar position
             const delay = isRestored ? 3000 : 100;
-            setTimeout(() => {
+            if (startDelayTimeoutRef.current) {
+                clearTimeout(startDelayTimeoutRef.current);
+            }
+            startDelayTimeoutRef.current = setTimeout(() => {
+                startDelayTimeoutRef.current = null;
                 startAutoScroll();
             }, delay);
         }
@@ -72,6 +96,10 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
     useEffect(() => {
         return () => {
             stopAutoScroll();
+            if (startDelayTimeoutRef.current) {
+                clearTimeout(startDelayTimeoutRef.current);
+                startDelayTimeoutRef.current = null;
+            }
         };
     }, []);
 
@@ -80,8 +108,24 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
         stopAutoScroll,
         pauseAutoScroll,
         resumeAutoScroll,
-        isAutoScrollActive: !!scrollIntervalRef.current,
-        autoScrollStarted: autoScrollStarted.current
+        isAutoScrollActive: !!rafIdRef.current,
+        autoScrollStarted: autoScrollStarted.current,
+        isProgrammaticScrollRef,
+        cancelScheduledStart: () => {
+            if (startDelayTimeoutRef.current) {
+                clearTimeout(startDelayTimeoutRef.current);
+                startDelayTimeoutRef.current = null;
+            }
+        },
+        scheduleStartAfter: (ms) => {
+            if (startDelayTimeoutRef.current) {
+                clearTimeout(startDelayTimeoutRef.current);
+            }
+            startDelayTimeoutRef.current = setTimeout(() => {
+                startDelayTimeoutRef.current = null;
+                startAutoScroll();
+            }, Math.max(0, ms || 0));
+        }
     };
 };
 

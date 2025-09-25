@@ -3,7 +3,7 @@ import { useFeedData } from './FeedDataProvider';
 
 const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
     const { checkAndFetchMore } = useFeedData();
-    const { pauseAutoScroll, resumeAutoScroll, autoScrollStarted, isProgrammaticScrollRef, cancelScheduledStart, scheduleStartAfter } = autoScrollControls;
+    const { pauseAutoScroll, resumeAutoScroll, autoScrollStarted, isProgrammaticScrollRef, cancelScheduledStart } = autoScrollControls;
     
     const scrollTimeoutRef = useRef(null);
     const isManualScrollingRef = useRef(false);
@@ -81,7 +81,7 @@ const FeedUserInteraction = ({ feedRef, autoScrollControls }) => {
             feedElement.removeEventListener('mousedown', handleMouseDown);
             feedElement.removeEventListener('touchstart', handleTouchStart);
         };
-    }, [feedRef, autoScrollStarted, handleUserInteraction]);
+    }, [feedRef, autoScrollStarted, handleUserInteraction, isProgrammaticScrollRef]);
 
     // Global event listeners to catch any user interaction
     useEffect(() => {

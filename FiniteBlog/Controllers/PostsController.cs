@@ -215,10 +215,27 @@ namespace FiniteBlog.Controllers
             }
 
             var remote = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? HttpContext.Connection.RemoteIpAddress?.ToString();
-            var captchaValid = await FiniteBlog.Services.GoogleRecaptchaVerifier.VerifyAsync(postDto.CaptchaToken, remote, HttpContext.RequestServices.GetRequiredService<IConfiguration>(), _logger);
-            if (!captchaValid)
+            var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var verify = await GoogleRecaptchaVerifier.VerifyDetailedAsync(postDto.CaptchaToken, remote, configuration, _logger);
+            if (!verify.Success)
             {
-                return BadRequest("Captcha verification failed.");
+                _logger.LogWarning(
+                    "reCAPTCHA failed. Reason={Reason}, Codes={Codes}, Score={Score}, Action={Action}, Host={Host}",
+                    verify.FailureReason,
+                    verify.ErrorCodes == null ? "(none)" : string.Join(",", verify.ErrorCodes),
+                    verify.Score,
+                    verify.Action,
+                    HttpContext.Request.Host.ToString());
+
+                var clientMessage = verify.FailureReason switch
+                {
+                    "missing-secret" => "Captcha is not configured on server.",
+                    "low-score" => $"Captcha score too low: {verify.Score}",
+                    "wrong-action" => $"Captcha action mismatch: {verify.Action}",
+                    _ => "Captcha verification failed."
+                };
+
+                return BadRequest(clientMessage);
             }
 
             var (post, errorMessage) = await _postService.CreatePostAsync(postDto);

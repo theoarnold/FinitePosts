@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PostForm from './PostForm/PostForm';
-import RecaptchaModal from '../components/common/RecaptchaModal';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 // API base URL for direct calls
 const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsites.net';
@@ -10,8 +10,16 @@ const API_BASE_URL = 'https://wypriback-hdcta5aregafawbq.uksouth-01.azurewebsite
 const Write = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showCaptcha, setShowCaptcha] = useState(false);
   const [pendingPostData, setPendingPostData] = useState(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  if (!process.env.REACT_APP_RECAPTCHA_SITE_KEY) {
+    // eslint-disable-next-line no-console
+    console.warn('REACT_APP_RECAPTCHA_SITE_KEY is not set. reCAPTCHA v3 will not load.');
+  }
+
+  // removed retry loop; we now execute immediately and fail fast if not ready
+
   const navigate = useNavigate();
 
   const handleSubmit = async (postData, validationError) => {
@@ -25,20 +33,29 @@ const Write = () => {
       return;
     }
 
-    // Trigger captcha flow first
     setError('');
     setPendingPostData(postData);
-    setShowCaptcha(true);
-  };
+    if (!executeRecaptcha) {
+      // eslint-disable-next-line no-console
+      if (!(window && window.grecaptcha)) {
+        console.warn('grecaptcha global not present. Check that the script loaded and site key is valid.');
+      }
+      setError('reCAPTCHA not ready. Please reload and try again.');
+      setPendingPostData(null);
+      return;
+    }
 
-  const handleCaptchaCancel = () => {
-    setShowCaptcha(false);
-    setPendingPostData(null);
+    try {
+      const captchaToken = await executeRecaptcha('create_post');
+      await handleCaptchaVerified(captchaToken);
+    } catch (err) {
+      setError('Failed to run reCAPTCHA. Please try again.');
+      setPendingPostData(null);
+    }
   };
 
   const handleCaptchaVerified = async (captchaToken) => {
     if (!pendingPostData) return;
-    setShowCaptcha(false);
     setIsSubmitting(true);
 
     try {
@@ -97,12 +114,6 @@ const Write = () => {
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         error={error}
-      />
-      <RecaptchaModal 
-        isVisible={showCaptcha}
-        onClose={handleCaptchaCancel}
-        onVerified={handleCaptchaVerified}
-        siteKey={"6Le5-NErAAAAADDoM6TL3hKn6kWABYaID2g50286"}
       />
     </>
   );

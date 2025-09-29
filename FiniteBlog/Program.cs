@@ -80,6 +80,17 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<PostHub>("/posthub");
 
+// Public endpoint to expose the reCAPTCHA v3 site key at runtime
+app.MapGet("/api/config/recaptcha-site-key", (IConfiguration config) =>
+{
+    var key = config["GoogleRecaptcha:SiteKey"];
+    if (string.IsNullOrWhiteSpace(key))
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(new { siteKey = key });
+});
+
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 

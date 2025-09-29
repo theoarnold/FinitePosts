@@ -8,6 +8,15 @@ namespace FiniteBlog.Services
 {
     public static class GoogleRecaptchaVerifier
     {
+        public sealed class RecaptchaVerifyResult
+        {
+            public bool Success { get; init; }
+            public double? Score { get; init; }
+            public string Action { get; init; } = string.Empty;
+            public string Hostname { get; init; } = string.Empty;
+            public string[]? ErrorCodes { get; init; }
+            public string? FailureReason { get; init; }
+        }
         private class RecaptchaResponse
         {
             public bool success { get; set; }
@@ -18,18 +27,13 @@ namespace FiniteBlog.Services
             public string[]? error_codes { get; set; }
         }
 
-        public static async Task<bool> VerifyAsync(string token, string? remoteIp, IConfiguration configuration, ILogger logger)
+        public static async Task<RecaptchaVerifyResult> VerifyDetailedAsync(string token, string? remoteIp, IConfiguration configuration, ILogger logger)
         {
             var secret = configuration["GoogleRecaptcha:SecretKey"];
             if (string.IsNullOrWhiteSpace(secret))
             {
-                // Hardcoded fallback (temporary)
-                secret = "6Le5-NErAAAAAJtZInNzO2jsU2oa5k3Yw27ttXRu";
-            }
-            if (string.IsNullOrWhiteSpace(secret))
-            {
                 logger.LogWarning("reCAPTCHA secret key is not configured.");
-                return false;
+                return new RecaptchaVerifyResult { Success = false, FailureReason = "missing-secret" };
             }
 
             try
@@ -54,17 +58,49 @@ namespace FiniteBlog.Services
 
                 if (parsed == null)
                 {
-                    return false;
+                    return new RecaptchaVerifyResult { Success = false, FailureReason = "invalid-response" };
                 }
 
-                // Accept success; optionally check score for v3
-                return parsed.success;
+                if (!parsed.success)
+                {
+                    return new RecaptchaVerifyResult { Success = false, ErrorCodes = parsed.error_codes, FailureReason = "recaptcha-failed" };
+                }
+
+                // Optional v3 score/action checks
+                var minScoreStr = configuration["GoogleRecaptcha:MinScore"]; // e.g. 0.5
+                if (double.TryParse(minScoreStr, out var minScore) && parsed.score < minScore)
+                {
+                    logger.LogWarning("reCAPTCHA score below threshold: {Score} < {MinScore}", parsed.score, minScore);
+                    return new RecaptchaVerifyResult { Success = false, Score = parsed.score, FailureReason = "low-score" };
+                }
+
+                var expectedAction = configuration["GoogleRecaptcha:ExpectedAction"]; // e.g. "create_post"
+                if (!string.IsNullOrWhiteSpace(expectedAction) && !string.Equals(parsed.action, expectedAction, StringComparison.Ordinal))
+                {
+                    logger.LogWarning("reCAPTCHA action mismatch: {Action} != {Expected}", parsed.action, expectedAction);
+                    return new RecaptchaVerifyResult { Success = false, Action = parsed.action, FailureReason = "wrong-action" };
+                }
+
+                return new RecaptchaVerifyResult
+                {
+                    Success = true,
+                    Score = parsed.score,
+                    Action = parsed.action,
+                    Hostname = parsed.hostname
+                };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error verifying reCAPTCHA");
-                return false;
+                return new RecaptchaVerifyResult { Success = false, FailureReason = "exception" };
             }
+        }
+
+        // Backward-compatible boolean API
+        public static async Task<bool> VerifyAsync(string token, string? remoteIp, IConfiguration configuration, ILogger logger)
+        {
+            var result = await VerifyDetailedAsync(token, remoteIp, configuration, logger);
+            return result.Success;
         }
     }
 }

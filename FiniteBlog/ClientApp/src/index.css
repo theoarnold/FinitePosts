@@ -56,9 +56,13 @@ body {
 }
 
 /* Prevent window scrolling when feed is mounted */
+/* Strongly lock body scroll when feed is active */
 .feed-scroll-locked {
   overflow: hidden;
   height: 100vh;
+}
+body.feed-scroll-locked {
+  overflow: hidden !important;
 }
 
 /* Prevent double scrollbar on mobile for ViewPost pages */

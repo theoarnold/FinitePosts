@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PostForm from './PostForm/PostForm';
@@ -12,6 +12,18 @@ const Write = () => {
   const [error, setError] = useState('');
   const [pendingPostData, setPendingPostData] = useState(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
+  // Pre-warm reCAPTCHA v3 so first submit doesn't wait for script readiness
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      if (!executeRecaptcha) return;
+      try {
+        await executeRecaptcha('warmup');
+      } catch (_) {}
+      if (isCancelled) return;
+    })();
+    return () => { isCancelled = true; };
+  }, [executeRecaptcha]);
 
   if (!process.env.REACT_APP_RECAPTCHA_SITE_KEY) {
     // eslint-disable-next-line no-console

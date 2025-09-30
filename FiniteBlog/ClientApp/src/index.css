@@ -557,6 +557,7 @@ button:disabled {
   align-items: center;
   gap: 0;
   margin-top: 16px;
+  margin-bottom: 14px; /* extra space between buttons and footer */
   position: relative;
   z-index: 10;
 }
@@ -1062,7 +1063,8 @@ button:disabled {
 .post-footer {
   margin-top: auto;
   border-top: 1px solid #eee;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
+  font-size: 0.9rem;
 }
 
 /* File upload styles */
@@ -1854,11 +1856,33 @@ button:disabled {
 .post-footer {
     background-color: #f0f0f0;
     border: 1px solid #ddd;
-    padding: 0.25rem 0.75rem;
+    padding: 0.15rem 0.75rem;
     border-radius: 6px;
     margin-top: 1rem;
     margin-left: 0;
     margin-right: 0;
+}
+
+/* Pin post footer inside post-card similar to manifesto */
+.post-card .post-footer {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  margin-top: 0;
+}
+
+/* Add space above the fixed footer inside post cards */
+.post-card .post-content {
+  padding-bottom: 2rem; /* ensure content doesn't overlap footer */
+}
+
+@media (max-width: 768px) {
+  .post-card .post-footer {
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.25rem;
+  }
 }
 
 /* Manifesto styling */
@@ -1867,6 +1891,59 @@ button:disabled {
     font-size: 1.05rem;
     line-height: 1.6;
     font-weight: 400;
+}
+
+/* Manifesto page styles */
+.manifesto-card {
+  padding-bottom: 3rem;
+  position: relative;
+  min-height: 300px;
+}
+
+.manifesto-content {
+  padding-left: 3rem;
+  margin-right: 0.5rem;
+  padding-bottom: 2rem; /* increased gap above fixed footer */
+}
+
+/* Use the same font as the wypri logo (Inter is used across the site) */
+.manifesto-title {
+  font-family: 'Space Mono', monospace;
+  padding-left: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.manifesto-subtitle {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  padding-left: 2rem;
+}
+
+/* Pin manifesto footer to bottom of the card */
+.manifesto-card .post-footer {
+  position: absolute;
+  left: 0.75rem; /* align with .card horizontal padding */
+  right: 0.75rem;
+  bottom: 0.75rem; /* match .card padding for consistent bottom gap */
+  margin-top: 0; /* remove top margin so it can sit flush at bottom */
+}
+
+/* Match card padding on mobile so footer sits at the same inset */
+@media (max-width: 768px) {
+  .manifesto-card .post-footer {
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.25rem; /* .card bottom padding on mobile */
+  }
+}
+
+.manifesto-title {
+  margin: 0 0 0.5rem 0;
+}
+
+.manifesto-subtitle {
+  font-style: italic;
+  font-weight: 600;
+  margin: 0 0 1.75rem 0;
 }
 
 .post-footer-content {
@@ -2544,6 +2621,13 @@ button:disabled {
   .post-feed {
     padding: 0.1rem 0.375rem 0.75rem 0.375rem;
   }
+
+  /* Make stats banner flush with card edges on mobile */
+  .personal-viewer-counter {
+    margin-top: -1rem; /* negate card's top padding to sit flush */
+    margin-left: -1rem; /* match .card mobile left padding */
+    margin-right: -1rem; /* match .card mobile right padding */
+  }
   
   .feed-post {
     padding: 1.1rem;
@@ -2737,4 +2821,9 @@ button:disabled {
     width: 100% !important; /* ensure full width */
     margin: 0 !important;
   }
+}
+
+/* Hide reCAPTCHA v3 badge (disclaimer is shown near the post form) */
+.grecaptcha-badge {
+  visibility: hidden;
 }

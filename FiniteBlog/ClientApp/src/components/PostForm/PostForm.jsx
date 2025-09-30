@@ -56,6 +56,13 @@ const PostForm = memo(({ onSubmit, isSubmitting, error }) => {
         onSubmit={handleSubmit}
         fileInputRef={fileInputRef}
       />
+      <div className="recaptcha-disclaimer" style={{ marginTop: '6px', marginBottom: '12px', fontSize: '12px', color: '#666' }}>
+        <small>
+          This site is protected by reCAPTCHA and the Google{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>{' '}and{' '}
+          <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer">Terms of Service</a>{' '}apply.
+        </small>
+      </div>
     </div>
   );
 });

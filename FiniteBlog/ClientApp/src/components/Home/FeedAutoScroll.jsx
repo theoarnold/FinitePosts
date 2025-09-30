@@ -7,7 +7,7 @@ const FeedAutoScroll = ({ feedRef, onScrollNearBottom }) => {
     const scrollIntervalRef = useRef(null);
     const rafIdRef = useRef(null);
     const lastTimestampRef = useRef(null);
-    const pixelsPerSecondRef = useRef(134);
+	const pixelsPerSecondRef = useRef(92.26);
     const isProgrammaticScrollRef = useRef(false);
     const autoScrollStarted = useRef(false);
     const isUserScrollingRef = useRef(false);

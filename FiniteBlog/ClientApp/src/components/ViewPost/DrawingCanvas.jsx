@@ -154,26 +154,7 @@ const TextAnnotationCanvas = forwardRef(({ isVisible, onAnnotationChange, target
           />
         )}
 
-        {/* Preview of pending annotation */}
-        {pendingAnnotation && (
-          <div
-            style={{
-              position: 'absolute',
-              left: `${pendingAnnotation.positionX}%`,
-              top: `${pendingAnnotation.positionY}%`,
-              transform: 'translate(-50%, -50%)',
-              color: '#ff0000',
-              fontWeight: 'bold',
-              fontSize: '24px',
-              textShadow: '2px 2px 4px rgba(255,255,255,0.9)',
-              pointerEvents: 'none',
-              zIndex: 3,
-              opacity: 0.7
-            }}
-          >
-            {pendingAnnotation.text}
-          </div>
-        )}
+        {/* Removed pending preview to prevent flashing duplicate text after submit */}
       </div>
     </div>
   );

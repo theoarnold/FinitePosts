@@ -13,7 +13,6 @@ const PostTextArea = memo(({
   const [fileName, setFileName] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const scrollTimeoutRef = useRef(null);
   const scrollDebounceRef = useRef(null);
   
   const textareaRef = useRef(null);
@@ -37,53 +36,12 @@ const PostTextArea = memo(({
       textarea.style.height = 'auto';
       const newHeight = Math.max(200, textarea.scrollHeight);
       textarea.style.height = `${newHeight}px`;
-
-      // Check if caret is truly at the end
-      const realCursorPosition = textarea.selectionStart;
-      const isActuallyAtEnd = realCursorPosition === content.length && content.length > 0;
-
-      if (!isActuallyAtEnd) {
-        // Do not force scroll when not at end (prevents jump back to top)
-        return;
-      }
-
-      // Pin scroll to bottom after layout has applied
-      const doScrollToBottom = () => {
-        const scrollingElement = document.scrollingElement || document.documentElement;
-        if (!scrollingElement) return;
-        scrollingElement.scrollTo({
-          top: scrollingElement.scrollHeight,
-          behavior: 'auto'
-        });
-      };
-
-      // Clear any existing scroll timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-
-      // Use rAF to wait for layout, then scroll; do twice for stability
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          doScrollToBottom();
-        });
-      });
-
-      // On mobile, keyboard animations can shift viewport; follow up with a delayed correction
-      if (isMobile) {
-        scrollTimeoutRef.current = setTimeout(() => {
-          doScrollToBottom();
-        }, 250);
-      }
     }, 16); // ~60fps debouncing to reduce INP
   }, [content, isMobile]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
       if (scrollDebounceRef.current) {
         clearTimeout(scrollDebounceRef.current);
       }
@@ -99,10 +57,6 @@ const PostTextArea = memo(({
     // Handle mobile keyboard show/hide events
     const handleViewportChange = () => {
       if (isMobile && textareaRef.current) {
-        // Clear any pending scroll operations when viewport changes
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
         if (scrollDebounceRef.current) {
           clearTimeout(scrollDebounceRef.current);
         }
@@ -141,18 +95,8 @@ const PostTextArea = memo(({
     }
   }, [onSubmit]);
 
-  const handleClick = useCallback((e) => {
-    // Update cursor position on click
-    if (isMobile) {
-      // Clear any pending scroll operations on mobile when user taps
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      if (scrollDebounceRef.current) {
-        clearTimeout(scrollDebounceRef.current);
-      }
-    }
-  }, [isMobile]);
+  // No-op; previously used to clear scroll timeouts on mobile tap
+  const handleClick = useCallback(() => {}, []);
 
   const handleFileChange = useCallback((e) => {
     if (e.target.files && e.target.files[0]) {

@@ -64,6 +64,9 @@ body {
 body.feed-scroll-locked {
   overflow: hidden !important;
 }
+html.feed-scroll-locked {
+  overflow: hidden !important;
+}
 
 /* Prevent double scrollbar on mobile for ViewPost pages */
 @media (max-width: 768px) {

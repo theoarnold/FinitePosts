@@ -9,11 +9,13 @@ import FeedContent from './FeedContent';
 const PostFeedContent = () => {
     const feedRef = useRef(null);
 
-    // Lock body scroll while feed is visible
+    // Lock page scroll while feed is visible
     useEffect(() => {
         document.body.classList.add('feed-scroll-locked');
+        document.documentElement.classList.add('feed-scroll-locked');
         return () => {
             document.body.classList.remove('feed-scroll-locked');
+            document.documentElement.classList.remove('feed-scroll-locked');
         };
     }, []);
 

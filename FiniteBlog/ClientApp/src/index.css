@@ -2834,3 +2834,27 @@ button:disabled {
 .grecaptcha-badge {
   visibility: hidden;
 }
+
+/* Post page ad container */
+.post-ad-container {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-top: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+}
+
+.post-ad-container .adsbygoogle {
+  display: block !important;
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .post-ad-container {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+  }
+}

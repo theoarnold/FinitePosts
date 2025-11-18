@@ -10,6 +10,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 function Root() {
   const [siteKey, setSiteKey] = useState(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '');
   const [loadingKey, setLoadingKey] = useState(!siteKey);
+  const adsenseClient = process.env.REACT_APP_ADSENSE_CLIENT || '';
 
   useEffect(() => {
     if (siteKey) return;
@@ -27,6 +28,25 @@ function Root() {
       })
       .finally(() => setLoadingKey(false));
   }, [siteKey]);
+
+  // Load Google AdSense script once with provided client id
+  useEffect(() => {
+    if (!adsenseClient) {
+      // eslint-disable-next-line no-console
+      console.warn('REACT_APP_ADSENSE_CLIENT is not set. Google ads will not load.');
+      return;
+    }
+    const scriptId = 'google-adsense-script';
+    if (document.getElementById(scriptId)) {
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.async = true;
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsenseClient)}`;
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+  }, [adsenseClient]);
 
   if (loadingKey) {
     return null;

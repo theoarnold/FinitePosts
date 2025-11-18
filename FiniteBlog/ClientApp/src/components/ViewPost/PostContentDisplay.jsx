@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePostData } from './PostDataProvider';
+import GoogleNativeAd from '../ads/GoogleNativeAd';
 
 const PostContentDisplay = ({ postContentRef, isShortPost, isAnnotating }) => {
     const { post } = usePostData();
@@ -14,6 +15,9 @@ const PostContentDisplay = ({ postContentRef, isShortPost, isAnnotating }) => {
             >
                 {post.content}
             </div>
+
+            {/* Native ad just below the post content */}
+            <GoogleNativeAd />
             
             {/* Display attached file if it exists */}
             {post.attachedFileUrl && (
